@@ -109,8 +109,6 @@ public class FluidRenderer {
         return true;
     }
 
-    private int prints = 0;
-
     public boolean render(BlockRenderView world, FluidState fluidState, BlockPos pos, ChunkModelBuffers buffers) {
         int posX = pos.getX();
         int posY = pos.getY();
@@ -120,11 +118,6 @@ public class FluidRenderer {
         BlockState state = fluidState.getBlockState();
         Identifier id = Registry.BLOCK.getId(state.getBlock());
         short blockId = (short) (int) Iris.getCurrentPack().getIdMap().getBlockProperties().getOrDefault(id, -1);
-
-        if (prints < 10) {
-            System.out.println("block id: " + blockId + " from " + id);
-            prints++;
-        }
 
         boolean sfUp = this.isFluidExposed(world, posX, posY + 1, posZ, fluid);
         boolean sfDown = this.isFluidExposed(world, posX, posY - 1, posZ, fluid) &&
@@ -166,11 +159,13 @@ public class FluidRenderer {
             Vec3d velocity = fluidState.getVelocity(world, pos);
 
             Sprite sprite;
+            ModelQuadFacing facing;
             float u1, u2, u3, u4;
             float v1, v2, v3, v4;
 
             if (velocity.x == 0.0D && velocity.z == 0.0D) {
                 sprite = sprites[0];
+                facing = ModelQuadFacing.UP;
                 u1 = sprite.getFrameU(0.0D);
                 v1 = sprite.getFrameV(0.0D);
                 u2 = u1;
@@ -181,6 +176,7 @@ public class FluidRenderer {
                 v4 = v1;
             } else {
                 sprite = sprites[1];
+                facing = ModelQuadFacing.UNASSIGNED;
                 float dir = (float) MathHelper.atan2(velocity.z, velocity.x) - (1.5707964f);
                 float sin = MathHelper.sin(dir) * 0.25F;
                 float cos = MathHelper.cos(dir) * 0.25F;
@@ -217,7 +213,7 @@ public class FluidRenderer {
             this.setVertex(quad, 3, 1.0F, h4, 0.0f, u4, v4);
 
             this.calculateQuadColors(quad, world, pos, lighter, Direction.UP, 1.0F, !lava);
-            this.flushQuad(buffers, quad, Direction.UP, false, blockId);
+            this.flushQuad(buffers, quad, facing, false, blockId);
 
             if (fluidState.method_15756(world, this.scratchPos.set(posX, posY + 1, posZ))) {
                 this.setVertex(quad, 3, 0.0f, h1, 0.0f, u1, v1);
@@ -225,7 +221,7 @@ public class FluidRenderer {
                 this.setVertex(quad, 1, 1.0F, h3, 1.0F, u3, v3);
                 this.setVertex(quad, 0, 1.0F, h4, 0.0f, u4, v4);
 
-                this.flushQuad(buffers, quad, Direction.DOWN, true, blockId);
+                this.flushQuad(buffers, quad, ModelQuadFacing.DOWN, true, blockId);
             }
 
             rendered = true;
@@ -246,7 +242,7 @@ public class FluidRenderer {
             this.setVertex(quad, 3, 1.0F, yOffset, 1.0F, maxU, maxV);
 
             this.calculateQuadColors(quad, world, pos, lighter, Direction.DOWN, 1.0F, !lava);
-            this.flushQuad(buffers, quad, Direction.DOWN, false, blockId);
+            this.flushQuad(buffers, quad, ModelQuadFacing.DOWN, false, blockId);
 
             rendered = true;
         }
@@ -346,7 +342,7 @@ public class FluidRenderer {
                 float br = dir.getAxis() == Direction.Axis.Z ? 0.8F : 0.6F;
 
                 this.calculateQuadColors(quad, world, pos, lighter, dir, br, !lava);
-                this.flushQuad(buffers, quad, dir, false, blockId);
+                this.flushQuad(buffers, quad, ModelQuadFacing.fromDirection(dir), false, blockId);
 
                 if (sprite != this.waterOverlaySprite) {
                     this.setVertex(quad, 0, x1, c1, z1, u1, v1);
@@ -354,7 +350,7 @@ public class FluidRenderer {
                     this.setVertex(quad, 2, x2, yOffset, z2, u2, v3);
                     this.setVertex(quad, 3, x2, c2, z2, u2, v2);
 
-                    this.flushQuad(buffers, quad, dir, true, blockId);
+                    this.flushQuad(buffers, quad, ModelQuadFacing.fromDirection(dir), true, blockId);
                 }
 
                 rendered = true;
@@ -379,7 +375,7 @@ public class FluidRenderer {
         }
     }
 
-    private void flushQuad(ChunkModelBuffers buffers, ModelQuadView quad, Direction dir, boolean flip, short blockId) {
+    private void flushQuad(ChunkModelBuffers buffers, ModelQuadView quad, ModelQuadFacing facing, boolean flip, short blockId) {
         int vertexIdx, lightOrder;
 
         if (flip) {
@@ -390,7 +386,7 @@ public class FluidRenderer {
             lightOrder = 1;
         }
 
-        ModelVertexSink sink = buffers.getSink(ModelQuadFacing.fromDirection(dir));
+        ModelVertexSink sink = buffers.getSink(facing);
         sink.ensureCapacity(4);
 
         for (int i = 0; i < 4; i++) {
@@ -408,6 +404,12 @@ public class FluidRenderer {
             sink.writeQuad(x, y, z, color, u, v, light, blockId);
 
             vertexIdx += lightOrder;
+        }
+
+        Sprite sprite = quad.getSprite();
+
+        if (sprite != null) {
+            buffers.getRenderData().addSprite(sprite);
         }
 
         sink.flush();

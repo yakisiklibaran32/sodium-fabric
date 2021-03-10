@@ -32,10 +32,10 @@ import java.util.Map;
  * Takes a slice of world state (block states, biome and light data arrays) and copies the data for use in off-thread
  * operations. This allows chunk build tasks to see a consistent snapshot of chunk data at the exact moment the task was
  * created.
- *
+ * <p>
  * World slices are not safe to use from multiple threads at once, but the data they contain is safe from modification
  * by the main client thread.
- *
+ * <p>
  * Object pooling should be used to avoid huge allocations as this class contains many large arrays.
  */
 public class WorldSlice extends ReusableObject implements BlockRenderView, BiomeAccess.Storage {
@@ -48,7 +48,7 @@ public class WorldSlice extends ReusableObject implements BlockRenderView, Biome
     private static final int SECTION_BLOCK_COUNT = SECTION_BLOCK_LENGTH * SECTION_BLOCK_LENGTH * SECTION_BLOCK_LENGTH;
 
     // The radius of blocks around the origin chunk that should be copied.
-    private static final int NEIGHBOR_BLOCK_RADIUS = 1;
+    private static final int NEIGHBOR_BLOCK_RADIUS = 16;
 
     // The radius of chunks around the origin chunk that should be copied.
     private static final int NEIGHBOR_CHUNK_RADIUS = MathHelper.roundUpToMultiple(NEIGHBOR_BLOCK_RADIUS, 16) >> 4;
@@ -117,7 +117,7 @@ public class WorldSlice extends ReusableObject implements BlockRenderView, Biome
 
     public static WorldChunk[] createChunkSlice(World world, ChunkSectionPos pos) {
         WorldChunk chunk = world.getChunk(pos.getX(), pos.getZ());
-        ChunkSection section = chunk.getSectionArray()[pos.getY()];
+        ChunkSection section = chunk.getSectionArray()[world.sectionCoordToIndex(pos.getY())];
 
         // If the chunk section is absent or empty, simply terminate now. There will never be anything in this chunk
         // section to render, so we need to signal that a chunk render task shouldn't created. This saves a considerable
@@ -218,13 +218,13 @@ public class WorldSlice extends ReusableObject implements BlockRenderView, Biome
     private void populateLightArrays(int sectionIdx, ChunkSectionPos pos) {
         ChunkLightingView blockLightProvider = this.world.getLightingProvider().get(LightType.BLOCK);
         ChunkLightingView skyLightProvider = this.world.getLightingProvider().get(LightType.SKY);
-        
+
         this.blockLightArrays[sectionIdx] = blockLightProvider.getLightSection(pos);
         this.skyLightArrays[sectionIdx] = skyLightProvider.getLightSection(pos);
     }
 
     private void populateBlockArrays(int sectionIdx, ChunkSectionPos pos, Chunk chunk) {
-        ChunkSection section = getChunkSection(chunk, pos);
+        ChunkSection section = this.getChunkSection(chunk, pos);
 
         if (section == null || section.isEmpty()) {
             section = EMPTY_SECTION;
@@ -390,7 +390,7 @@ public class WorldSlice extends ReusableObject implements BlockRenderView, Biome
         // [VanillaCopy] WorldView#getBiomeForNoiseGen(int, int, int)
         BiomeArray array = this.biomeArrays[getLocalChunkIndex(x2, z2)];
 
-        if (array != null ) {
+        if (array != null) {
             return array.getBiomeForNoiseGen(x, y, z);
         }
 
@@ -447,13 +447,23 @@ public class WorldSlice extends ReusableObject implements BlockRenderView, Biome
         return z << TABLE_BITS | x;
     }
 
-    private static ChunkSection getChunkSection(Chunk chunk, ChunkSectionPos pos) {
+    private ChunkSection getChunkSection(Chunk chunk, ChunkSectionPos pos) {
         ChunkSection section = null;
 
-        if (!World.isHeightInvalid(ChunkSectionPos.getBlockCoord(pos.getY()))) {
-            section = chunk.getSectionArray()[pos.getY()];
+        if (!chunk.isOutOfHeightLimit(ChunkSectionPos.getBlockCoord(pos.getY()))) {
+            section = chunk.getSectionArray()[this.world.sectionCoordToIndex(pos.getY())];
         }
 
         return section;
+    }
+
+    @Override
+    public int getHeight() {
+        return this.world.getHeight();
+    }
+
+    @Override
+    public int getBottomY() {
+        return this.world.getBottomY();
     }
 }

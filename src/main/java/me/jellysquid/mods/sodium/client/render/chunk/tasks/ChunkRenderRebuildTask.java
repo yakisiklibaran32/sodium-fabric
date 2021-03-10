@@ -13,9 +13,11 @@ import me.jellysquid.mods.sodium.client.render.pipeline.context.ChunkRenderConte
 import me.jellysquid.mods.sodium.client.util.task.CancellationSource;
 import me.jellysquid.mods.sodium.client.world.WorldSlice;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderLayers;
 import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
@@ -54,7 +56,7 @@ public class ChunkRenderRebuildTask<T extends ChunkGraphicsState> extends ChunkR
         ChunkOcclusionDataBuilder occluder = new ChunkOcclusionDataBuilder();
         ChunkRenderBounds.Builder bounds = new ChunkRenderBounds.Builder();
 
-        buffers.init();
+        buffers.init(renderData);
         pipeline.init(this.slice, this.slice.getOrigin());
 
         int baseX = this.render.getOriginX();
@@ -89,7 +91,7 @@ public class ChunkRenderRebuildTask<T extends ChunkGraphicsState> extends ChunkR
                         RenderLayer layer = RenderLayers.getBlockLayer(blockState);
 
                         if (pipeline.renderBlock(this.slice, blockState, pos.set(x, y, z), buffers.get(layer), true)) {
-                            bounds.addBlock(x, y, z);
+                            bounds.addBlock(relX, relY, relZ);
                         }
                     }
 
@@ -101,20 +103,20 @@ public class ChunkRenderRebuildTask<T extends ChunkGraphicsState> extends ChunkR
                         RenderLayer layer = RenderLayers.getFluidLayer(fluidState);
 
                         if (pipeline.renderFluid(this.slice, fluidState, pos.set(x, y, z), buffers.get(layer))) {
-                            bounds.addBlock(x, y, z);
+                            bounds.addBlock(relX, relY, relZ);
                         }
                     }
 
-                    if (block.hasBlockEntity()) {
+                    if (blockState.hasBlockEntity()) {
                         BlockEntity entity = this.slice.getBlockEntity(pos.set(x, y, z), WorldChunk.CreationType.CHECK);
 
                         if (entity != null) {
-                            BlockEntityRenderer<BlockEntity> renderer = BlockEntityRenderDispatcher.INSTANCE.get(entity);
+                            BlockEntityRenderer<BlockEntity> renderer = MinecraftClient.getInstance().getBlockEntityRenderDispatcher().get(entity);
 
                             if (renderer != null) {
                                 renderData.addBlockEntity(entity, !renderer.rendersOutsideBoundingBox(entity));
 
-                                bounds.addBlock(x, y, z);
+                                bounds.addBlock(relX, relY, relZ);
                             }
                         }
                     }
