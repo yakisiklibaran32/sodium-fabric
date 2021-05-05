@@ -229,7 +229,7 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
 
         pass.endDrawing();
 
-        RenderSystem.clearCurrentColor();
+        RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
     }
 
     public void reload() {
@@ -310,11 +310,11 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
                 if (stage >= 0) {
                     MatrixStack.Entry entry = matrices.peek();
                     VertexConsumer transformer = new OverlayVertexConsumer(bufferBuilders.getEffectVertexConsumers().getBuffer(ModelLoader.BLOCK_DESTRUCTION_RENDER_LAYERS.get(stage)), entry.getModel(), entry.getNormal());
-                    consumer = (layer) -> layer.hasCrumbling() ? VertexConsumers.dual(transformer, immediate.getBuffer(layer)) : immediate.getBuffer(layer);
+                    consumer = (layer) -> layer.hasCrumbling() ? VertexConsumers.union(transformer, immediate.getBuffer(layer)) : immediate.getBuffer(layer);
                 }
             }
 
-            BlockEntityRenderDispatcher.INSTANCE.render(blockEntity, tickDelta, matrices, consumer);
+            client.getBlockEntityRenderDispatcher().render(blockEntity, tickDelta, matrices, consumer);
 
             matrices.pop();
         }
@@ -325,7 +325,7 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
             matrices.push();
             matrices.translate((double) pos.getX() - x, (double) pos.getY() - y, (double) pos.getZ() - z);
 
-            BlockEntityRenderDispatcher.INSTANCE.render(blockEntity, tickDelta, matrices, immediate);
+            client.getBlockEntityRenderDispatcher().render(blockEntity, tickDelta, matrices, immediate);
 
             matrices.pop();
         }

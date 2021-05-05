@@ -60,6 +60,8 @@ public abstract class MixinDebugHud {
     }
 
     private void renderStrings(MatrixStack matrixStack, List<String> list, boolean right) {
+        //TODO: this might break
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
         VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
 
         Matrix4f modelMatrix = matrixStack.peek().getModel();
@@ -95,7 +97,7 @@ public abstract class MixinDebugHud {
         float k = (float) (color & 255) / 255.0F;
 
         BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
-        bufferBuilder.begin(GL20C.GL_QUADS, VertexFormats.POSITION_COLOR);
+        bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
 
         Matrix4f matrix = matrixStack.peek()
                 .getModel();

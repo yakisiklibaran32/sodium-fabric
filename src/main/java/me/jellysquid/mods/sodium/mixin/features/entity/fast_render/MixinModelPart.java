@@ -13,11 +13,13 @@ import me.jellysquid.mods.sodium.client.util.math.MatrixUtil;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.util.math.Vec3f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+
+import java.util.List;
 
 @Mixin(ModelPart.class)
 public class MixinModelPart {
@@ -25,7 +27,7 @@ public class MixinModelPart {
 
     @Shadow
     @Final
-    private ObjectList<ModelPart.Cuboid> cuboids;
+    private List<ModelPart.Cuboid> cuboids;
 
     /**
      * @author JellySquid
@@ -50,7 +52,7 @@ public class MixinModelPart {
                 int norm = Norm3b.pack(normX, normY, normZ);
 
                 for (ModelPart.Vertex vertex : quad.vertices) {
-                    Vector3f pos = vertex.pos;
+                    Vec3f pos = vertex.pos;
 
                     float x1 = pos.getX() * NORM;
                     float y1 = pos.getY() * NORM;

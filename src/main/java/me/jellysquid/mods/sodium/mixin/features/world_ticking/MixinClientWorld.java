@@ -44,7 +44,7 @@ public abstract class MixinClientWorld extends World {
      * @author JellySquid
      */
     @Overwrite
-    public void randomBlockDisplayTick(int xCenter, int yCenter, int zCenter, int radius, Random random, boolean spawnBarrierParticles, BlockPos.Mutable pos) {
+    public void randomBlockDisplayTick(int xCenter, int yCenter, int zCenter, int radius, Random random, ClientWorld.BlockParticle particle, BlockPos.Mutable pos) {
         int x = xCenter + (random.nextInt(radius) - random.nextInt(radius));
         int y = yCenter + (random.nextInt(radius) - random.nextInt(radius));
         int z = zCenter + (random.nextInt(radius) - random.nextInt(radius));
@@ -54,7 +54,7 @@ public abstract class MixinClientWorld extends World {
         BlockState blockState = this.getBlockState(pos);
 
         if (!blockState.isAir()) {
-            this.performBlockDisplayTick(blockState, pos, random, spawnBarrierParticles);
+            this.performBlockDisplayTick(blockState, pos, random, false);
         }
 
         if (!blockState.isFullCube(this, pos)) {

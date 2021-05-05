@@ -450,13 +450,23 @@ public class WorldSlice extends ReusableObject implements BlockRenderView, Biome
         return z << TABLE_BITS | x;
     }
 
-    private static ChunkSection getChunkSection(Chunk chunk, ChunkSectionPos pos) {
+    private ChunkSection getChunkSection(Chunk chunk, ChunkSectionPos pos) {
         ChunkSection section = null;
 
-        if (!World.isHeightInvalid(ChunkSectionPos.getBlockCoord(pos.getY()))) {
-            section = chunk.getSectionArray()[pos.getY()];
+        if (!chunk.isOutOfHeightLimit(ChunkSectionPos.getBlockCoord(pos.getY()))) {
+            section = chunk.getSectionArray()[this.world.sectionCoordToIndex(pos.getY())];
         }
 
         return section;
+    }
+
+    @Override
+    public int getHeight() {
+        return this.world.getHeight();
+    }
+
+    @Override
+    public int getBottomY() {
+        return this.world.getBottomY();
     }
 }

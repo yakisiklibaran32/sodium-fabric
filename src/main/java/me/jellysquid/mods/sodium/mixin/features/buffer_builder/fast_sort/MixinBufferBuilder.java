@@ -31,7 +31,7 @@ public class MixinBufferBuilder {
      * @reason Reduce allocations, use stack allocations, avoid unnecessary math and pointer bumping, inline comparators
      * @author JellySquid
      */
-    @Overwrite
+    /*@Overwrite
     public void sortQuads(float cameraX, float cameraY, float cameraZ) {
         this.buffer.clear();
         FloatBuffer floatBuffer = this.buffer.asFloatBuffer();
@@ -88,7 +88,7 @@ public class MixinBufferBuilder {
                 bits.set(l);
             }
         }
-    }
+    }*/
 
     private static void mergeSort(int[] indicesArray, float[] distanceArray) {
         mergeSort(indicesArray, 0, indicesArray.length, distanceArray, Arrays.copyOf(indicesArray, indicesArray.length));

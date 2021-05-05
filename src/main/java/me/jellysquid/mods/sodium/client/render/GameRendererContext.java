@@ -1,5 +1,6 @@
 package me.jellysquid.mods.sodium.client.render;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Matrix4f;
 import org.lwjgl.system.MemoryStack;
@@ -29,9 +30,9 @@ public class GameRendererContext {
 
         FloatBuffer bufModelViewProjection = memoryStack.mallocFloat(16);
 
-        Matrix4f matrix = PROJECTION_MATRIX.copy();
+        Matrix4f matrix = RenderSystem.getProjectionMatrix().copy();
         matrix.multiply(matrices.getModel());
-        matrix.writeToBuffer(bufModelViewProjection);
+        matrix.write(bufModelViewProjection, false);
 
         return bufModelViewProjection;
     }
