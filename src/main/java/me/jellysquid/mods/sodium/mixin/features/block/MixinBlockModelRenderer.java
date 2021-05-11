@@ -1,5 +1,6 @@
 package me.jellysquid.mods.sodium.mixin.features.block;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import me.jellysquid.mods.sodium.client.model.quad.ModelQuadView;
 import me.jellysquid.mods.sodium.client.model.vertex.VanillaVertexTypes;
 import me.jellysquid.mods.sodium.client.model.vertex.VertexDrain;
@@ -11,6 +12,7 @@ import me.jellysquid.mods.sodium.client.util.rand.XoRoShiRoRandom;
 import me.jellysquid.mods.sodium.common.util.DirectionUtil;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.block.BlockModelRenderer;
 import net.minecraft.client.render.model.BakedModel;
 import net.minecraft.client.render.model.BakedQuad;
@@ -88,10 +90,15 @@ public class MixinBlockModelRenderer {
 
             ModelQuadView quad = ((ModelQuadView) bakedQuad);
 
-            for (int i = 0; i < 4; i++) {
-                drain.writeQuad(entry, quad.getX(i), quad.getY(i), quad.getZ(i), color, quad.getTexU(i), quad.getTexV(i),
-                        light, overlay, ModelQuadUtil.getFacingNormal(bakedQuad.getFace()));
-            }
+
+           // for (int i = 0; i < 4; i++) {
+                drain.writeQuad(entry, quad.getX(0), quad.getY(0), quad.getZ(0), color, quad.getTexU(0), quad.getTexV(0), light, overlay, ModelQuadUtil.getFacingNormal(bakedQuad.getFace()));
+                drain.writeQuad(entry, quad.getX(1), quad.getY(1), quad.getZ(1), color, quad.getTexU(1), quad.getTexV(1), light, overlay, ModelQuadUtil.getFacingNormal(bakedQuad.getFace()));
+                drain.writeQuad(entry, quad.getX(3), quad.getY(3), quad.getZ(3), color, quad.getTexU(3), quad.getTexV(3), light, overlay, ModelQuadUtil.getFacingNormal(bakedQuad.getFace()));
+                drain.writeQuad(entry, quad.getX(3), quad.getY(3), quad.getZ(3), color, quad.getTexU(3), quad.getTexV(3), light, overlay, ModelQuadUtil.getFacingNormal(bakedQuad.getFace()));
+                drain.writeQuad(entry, quad.getX(1), quad.getY(1), quad.getZ(1), color, quad.getTexU(1), quad.getTexV(1), light, overlay, ModelQuadUtil.getFacingNormal(bakedQuad.getFace()));
+                drain.writeQuad(entry, quad.getX(2), quad.getY(2), quad.getZ(2), color, quad.getTexU(2), quad.getTexV(2), light, overlay, ModelQuadUtil.getFacingNormal(bakedQuad.getFace()));
+            //}
 
             SpriteUtil.markSpriteActive(quad.getSprite());
         }

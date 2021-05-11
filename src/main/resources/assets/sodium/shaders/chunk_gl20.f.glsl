@@ -1,14 +1,16 @@
-#version 110
+#version 330 core
 
-varying vec4 v_Color; // The interpolated vertex color
-varying vec2 v_TexCoord; // The interpolated block texture coordinates
-varying vec2 v_LightCoord; // The interpolated light map texture coordinates
+in vec4 v_Color; // The interpolated vertex color
+in vec2 v_TexCoord; // The interpolated block texture coordinates
+in vec2 v_LightCoord; // The interpolated light map texture coordinates
+
+out vec4 outputs;
 
 uniform sampler2D u_BlockTex; // The block texture sampler
 uniform sampler2D u_LightTex; // The light map texture sampler
 
 #ifdef USE_FOG
-varying float v_FragDistance;
+in float v_FragDistance;
 uniform vec4 u_FogColor; // The color of the fog
 #endif
 
@@ -45,10 +47,10 @@ void main() {
 #ifdef USE_FOG
     float fogFactor = clamp(getFogFactor(), 0.0, 1.0);
 
-    gl_FragColor = mix(u_FogColor, diffuseColor, fogFactor);
-    gl_FragColor.a = diffuseColor.a;
+    outputs = mix(u_FogColor, diffuseColor, fogFactor);
+    outputs.a = diffuseColor.a;
 #else
     // No fog is being used, so the fragment color is just that of the blended texture color
-    gl_FragColor = diffuseColor;
+    outputs = diffuseColor;
 #endif
 }

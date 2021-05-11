@@ -127,7 +127,7 @@ public class BlockRenderer {
             colors = this.biomeColorBlender.getColors(colorProvider, world, state, pos, src);
         }
 
-        for (int dstIndex = 0; dstIndex < 4; dstIndex++) {
+        /*for (int dstIndex = 0; dstIndex < 4; dstIndex++) {
             int srcIndex = order.getVertexIndex(dstIndex);
 
             float x = src.getX(srcIndex) + (float) offset.getX();
@@ -142,7 +142,13 @@ public class BlockRenderer {
             int lm = light.lm[srcIndex];
 
             sink.writeQuad(x, y, z, color, u, v, lm);
-        }
+        }*/
+        quadStuff(0, src, offset, order, colors, light, sink);
+        quadStuff(1, src, offset, order, colors, light, sink);
+        quadStuff(3, src, offset, order, colors, light, sink);
+        quadStuff(3, src, offset, order, colors, light, sink);
+        quadStuff(1, src, offset, order, colors, light, sink);
+        quadStuff(2, src, offset, order, colors, light, sink);
 
         Sprite sprite = src.getSprite();
 
@@ -150,6 +156,23 @@ public class BlockRenderer {
             renderData.addSprite(sprite);
         }
     }
+    public static void quadStuff(int dstIndex, ModelQuadView src, Vec3d offset, ModelQuadOrientation order, int[] colors, QuadLightData light, ModelVertexSink sink) {
+        int srcIndex = order.getVertexIndex(dstIndex);
+
+        float x = src.getX(srcIndex) + (float) offset.getX();
+        float y = src.getY(srcIndex) + (float) offset.getY();
+        float z = src.getZ(srcIndex) + (float) offset.getZ();
+
+        int color = ColorABGR.mul(colors != null ? colors[srcIndex] : 0xFFFFFFFF, light.br[srcIndex]);
+
+        float u = src.getTexU(srcIndex);
+        float v = src.getTexV(srcIndex);
+
+        int lm = light.lm[srcIndex];
+
+        sink.writeQuad(x, y, z, color, u, v, lm);
+    }
+
 
     private LightMode getLightingMode(BlockState state, BakedModel model) {
         if (this.useAmbientOcclusion && model.useAmbientOcclusion() && state.getLuminance() == 0) {

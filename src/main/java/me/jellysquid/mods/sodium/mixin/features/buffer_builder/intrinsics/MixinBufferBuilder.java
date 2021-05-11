@@ -44,9 +44,9 @@ public abstract class MixinBufferBuilder extends FixedColorVertexConsumer {
 
         QuadVertexSink drain = VertexDrain.of(this)
                 .createSink(VanillaVertexTypes.QUADS);
-        drain.ensureCapacity(4);
+        drain.ensureCapacity(6);
 
-        for (int i = 0; i < 4; i++) {
+        /*for (int i = 0; i < 6; i++) {
             float x = quadView.getX(i);
             float y = quadView.getY(i);
             float z = quadView.getZ(i);
@@ -82,8 +82,51 @@ public abstract class MixinBufferBuilder extends FixedColorVertexConsumer {
             pos.transform(modelMatrix);
 
             drain.writeQuad(pos.getX(), pos.getY(), pos.getZ(), color, u, v, light[i], overlay, norm);
-        }
+        }*/
+        stuffQuad(0, quadView, brightnessTable, colorize, r, g, b, modelMatrix, drain, light, overlay, norm);
+        stuffQuad(1, quadView, brightnessTable, colorize, r, g, b, modelMatrix, drain, light, overlay, norm);
+        stuffQuad(3, quadView, brightnessTable, colorize, r, g, b, modelMatrix, drain, light, overlay, norm);
+        stuffQuad(3, quadView, brightnessTable, colorize, r, g, b, modelMatrix, drain, light, overlay, norm);
+        stuffQuad(1, quadView, brightnessTable, colorize, r, g, b, modelMatrix, drain, light, overlay, norm);
+        stuffQuad(2, quadView, brightnessTable, colorize, r, g, b, modelMatrix, drain, light, overlay, norm);
 
         drain.flush();
+    }
+    private void stuffQuad(int i, ModelQuadView quadView, float[] brightnessTable, boolean colorize, float r, float g, float b, Matrix4f modelMatrix, QuadVertexSink drain, int[] light, int overlay, int norm) {
+        float x = quadView.getX(i);
+        float y = quadView.getY(i);
+        float z = quadView.getZ(i);
+
+        float fR;
+        float fG;
+        float fB;
+
+        float brightness = brightnessTable[i];
+
+        if (colorize) {
+            int color = quadView.getColor(i);
+
+            float oR = ColorU8.normalize(ColorABGR.unpackRed(color));
+            float oG = ColorU8.normalize(ColorABGR.unpackGreen(color));
+            float oB = ColorU8.normalize(ColorABGR.unpackBlue(color));
+
+            fR = oR * brightness * r;
+            fG = oG * brightness * g;
+            fB = oB * brightness * b;
+        } else {
+            fR = brightness * r;
+            fG = brightness * g;
+            fB = brightness * b;
+        }
+
+        float u = quadView.getTexU(i);
+        float v = quadView.getTexV(i);
+
+        int color = ColorABGR.pack(fR, fG, fB, 1.0F);
+
+        Vector4f pos = new Vector4f(x, y, z, 1.0F);
+        pos.transform(modelMatrix);
+
+        drain.writeQuad(pos.getX(), pos.getY(), pos.getZ(), color, u, v, light[i], overlay, norm);
     }
 }

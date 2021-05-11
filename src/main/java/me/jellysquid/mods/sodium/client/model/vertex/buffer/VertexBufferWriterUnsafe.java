@@ -1,7 +1,9 @@
 package me.jellysquid.mods.sodium.client.model.vertex.buffer;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import me.jellysquid.mods.sodium.client.model.vertex.type.BufferVertexType;
 import me.jellysquid.mods.sodium.client.util.UnsafeUtil;
+import net.minecraft.client.render.VertexFormat;
 import org.lwjgl.system.MemoryUtil;
 import sun.misc.Unsafe;
 
@@ -13,7 +15,6 @@ import sun.misc.Unsafe;
  */
 public abstract class VertexBufferWriterUnsafe extends VertexBufferWriter {
     protected static final Unsafe UNSAFE = UnsafeUtil.instanceNullable();
-
     /**
      * The write pointer into the buffer storage. This is advanced by the vertex stride every time
      * {@link VertexBufferWriterUnsafe#advance()} is called.

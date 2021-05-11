@@ -54,7 +54,7 @@ public class SodiumGameOptionPages {
                             if (MinecraftClient.isFabulousGraphicsOrBetter()) {
                                 Framebuffer framebuffer = MinecraftClient.getInstance().worldRenderer.getCloudsFramebuffer();
                                 if (framebuffer != null) {
-                                    framebuffer.clear(MinecraftClient.IS_SYSTEM_MAC);
+                                    framebuffer.clear(true);
                                 }
                             }
                         }, (opts) -> opts.quality.enableClouds)

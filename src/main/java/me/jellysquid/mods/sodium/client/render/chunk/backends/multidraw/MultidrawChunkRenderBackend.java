@@ -1,5 +1,6 @@
 package me.jellysquid.mods.sodium.client.render.chunk.backends.multidraw;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.ObjectArrayFIFOQueue;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import me.jellysquid.mods.sodium.client.gl.arena.GlBufferArena;
@@ -203,6 +204,7 @@ public class MultidrawChunkRenderBackend extends ChunkRenderShaderBackend<Multid
 
         for (ChunkRegion<?> region : this.pendingBatches) {
             ChunkDrawCallBatcher batch = region.getDrawBatcher();
+           // RenderSystem.getShader().bind();
 
             try (DrawCommandList drawCommandList = commandList.beginTessellating(region.getTessellation())) {
                 drawCommandList.multiDrawArraysIndirect(pointer, batch.getCount(), 0 /* tightly packed */);
@@ -228,6 +230,7 @@ public class MultidrawChunkRenderBackend extends ChunkRenderShaderBackend<Multid
     }
 
     private void setupUploadBatches(Iterator<ChunkBuildResult<MultidrawGraphicsState>> renders) {
+
         while (renders.hasNext()) {
             ChunkBuildResult<MultidrawGraphicsState> result = renders.next();
             ChunkRenderContainer<MultidrawGraphicsState> render = result.render;

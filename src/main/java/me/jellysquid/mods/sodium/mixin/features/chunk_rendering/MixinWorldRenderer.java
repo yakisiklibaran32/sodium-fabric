@@ -87,7 +87,7 @@ public abstract class MixinWorldRenderer {
         RenderDevice.enterManagedCode();
 
         try {
-            this.renderer.drawChunkLayer(renderLayer, matrixStack, x, y, z);
+            this.renderer.drawChunkLayer(renderLayer, matrixStack, matrix4f, x, y, z);
         } finally {
             RenderDevice.exitManagedCode();
         }

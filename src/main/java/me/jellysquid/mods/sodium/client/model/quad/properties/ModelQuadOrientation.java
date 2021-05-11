@@ -6,6 +6,7 @@ package me.jellysquid.mods.sodium.client.model.quad.properties;
  */
 public enum ModelQuadOrientation {
     NORMAL(new int[] { 0, 1, 2, 3 }),
+    TRI(new int[] { 0, 1, 3, 3, 1, 2 }),
     FLIP(new int[] { 1, 2, 3, 0 });
 
     private final int[] indices;

@@ -10,6 +10,7 @@ import me.jellysquid.mods.sodium.client.model.quad.ModelQuadViewMutable;
 import me.jellysquid.mods.sodium.client.model.quad.blender.BiomeColorBlender;
 import me.jellysquid.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import me.jellysquid.mods.sodium.client.model.quad.properties.ModelQuadFlags;
+import me.jellysquid.mods.sodium.client.model.quad.properties.ModelQuadOrientation;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.ChunkModelBuffers;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexSink;
 import me.jellysquid.mods.sodium.client.util.Norm3b;
@@ -382,22 +383,15 @@ public class FluidRenderer {
         ModelVertexSink sink = buffers.getSink(facing);
         sink.ensureCapacity(4);
 
-        for (int i = 0; i < 4; i++) {
-            float x = quad.getX(i);
-            float y = quad.getY(i);
-            float z = quad.getZ(i);
+       // for (int i = 0; i < 4; i++) {
 
-            int color = this.quadColors[vertexIdx];
-
-            float u = quad.getTexU(i);
-            float v = quad.getTexV(i);
-
-            int light = this.quadLightData.lm[vertexIdx];
-
-            sink.writeQuad(x, y, z, color, u, v, light);
-
-            vertexIdx += lightOrder;
-        }
+        //}
+        quadStuff2(0, vertexIdx, lightOrder, sink);
+        quadStuff2(1, vertexIdx, lightOrder, sink);
+        quadStuff2(3, vertexIdx, lightOrder, sink);
+        quadStuff2(3, vertexIdx, lightOrder, sink);
+        quadStuff2(1, vertexIdx, lightOrder, sink);
+        quadStuff2(2, vertexIdx, lightOrder, sink);
 
         Sprite sprite = quad.getSprite();
 
@@ -414,6 +408,23 @@ public class FluidRenderer {
         quad.setZ(i, z);
         quad.setTexU(i, u);
         quad.setTexV(i, v);
+    }
+
+    private void quadStuff2(int i, int vertexIdx, int lightOrder, ModelVertexSink sink) {
+        float x = quad.getX(i);
+        float y = quad.getY(i);
+        float z = quad.getZ(i);
+
+        int color = this.quadColors[vertexIdx];
+
+        float u = quad.getTexU(i);
+        float v = quad.getTexV(i);
+
+        int light = this.quadLightData.lm[vertexIdx];
+
+        sink.writeQuad(x, y, z, color, u, v, light);
+
+        vertexIdx += lightOrder;
     }
 
     private float getCornerHeight(BlockRenderView world, int x, int y, int z, Fluid fluid) {

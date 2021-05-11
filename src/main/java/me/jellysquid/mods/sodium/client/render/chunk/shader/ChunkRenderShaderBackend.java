@@ -1,5 +1,6 @@
 package me.jellysquid.mods.sodium.client.render.chunk.shader;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexFormat;
 import me.jellysquid.mods.sodium.client.gl.shader.GlProgram;
 import me.jellysquid.mods.sodium.client.gl.shader.GlShader;
@@ -11,8 +12,12 @@ import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import me.jellysquid.mods.sodium.client.render.chunk.ChunkGraphicsState;
 import me.jellysquid.mods.sodium.client.render.chunk.ChunkRenderBackend;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkMeshAttribute;
+import net.minecraft.client.render.BufferRenderer;
+import net.minecraft.client.render.Shader;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Matrix4f;
+import org.lwjgl.opengl.GL43C;
 
 import java.util.EnumMap;
 
@@ -61,9 +66,52 @@ public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState>
     }
 
     @Override
-    public void begin(MatrixStack matrixStack) {
+    public void begin(MatrixStack matrixStack, Matrix4f matrix4f) {
         this.activeProgram = this.programs.get(LegacyFogHelper.getFogMode());
         this.activeProgram.bind();
+        //Shader shader = RenderSystem.getShader();
+        //BufferRenderer.unbindAll();
+        //GL43C.glBindAttribLocation(shader.getProgramRef(), ChunkShaderBindingPoints.MODEL_OFFSET.getGenericAttributeIndex(), "d_ModelOffset");
+        /*for(int k = 0; k < 12; ++k) {
+            int l = RenderSystem.getShaderTexture(k);
+            shader.addSampler("Sampler" + k, l);
+        }
+
+        if (shader.modelViewMat != null) {
+            shader.modelViewMat.set(matrixStack.peek().getModel());
+        }
+
+        if (shader.projectionMat != null) {
+            shader.projectionMat.set(matrix4f);
+        }
+
+        if (shader.colorModulator != null) {
+            shader.colorModulator.set(RenderSystem.getShaderColor());
+        }
+
+        if (shader.fogStart != null) {
+            shader.fogStart.set(RenderSystem.getShaderFogStart());
+        }
+
+        if (shader.fogEnd != null) {
+            shader.fogEnd.set(RenderSystem.getShaderFogEnd());
+        }
+
+        if (shader.fogColor != null) {
+            shader.fogColor.set(RenderSystem.getShaderFogColor());
+        }
+
+        if (shader.textureMat != null) {
+            shader.textureMat.set(RenderSystem.getTextureMatrix());
+        }
+
+        if (shader.gameTime != null) {
+            shader.gameTime.set(RenderSystem.getShaderGameTime());
+        }
+
+        RenderSystem.setupShaderLights(shader);*/
+        //shader.upload();
+        //shader.bind();
         this.activeProgram.setup(matrixStack, this.vertexType.getModelScale(), this.vertexType.getTextureScale());
     }
 
@@ -71,6 +119,7 @@ public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState>
     public void end(MatrixStack matrixStack) {
         this.activeProgram.unbind();
         this.activeProgram = null;
+
     }
 
     @Override

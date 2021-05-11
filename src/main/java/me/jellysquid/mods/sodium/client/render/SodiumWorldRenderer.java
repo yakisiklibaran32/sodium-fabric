@@ -221,15 +221,16 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
     /**
      * Performs a render pass for the given {@link RenderLayer} and draws all visible chunks for it.
      */
-    public void drawChunkLayer(RenderLayer renderLayer, MatrixStack matrixStack, double x, double y, double z) {
+    public void drawChunkLayer(RenderLayer renderLayer, MatrixStack matrixStack, Matrix4f matrix4f, double x, double y, double z) {
         BlockRenderPass pass = this.renderPassManager.getRenderPassForLayer(renderLayer);
-        pass.startDrawing();
+        renderLayer.startDrawing();
 
-        this.chunkRenderManager.renderLayer(matrixStack, pass, x, y, z);
+        RenderSystem.enableDepthTest();
+        this.chunkRenderManager.renderLayer(matrixStack, matrix4f, pass, x, y, z);
 
-        pass.endDrawing();
+        renderLayer.endDrawing();
 
-        RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
+        RenderSystem.clear(256, true);
     }
 
     public void reload() {
@@ -424,6 +425,9 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
      * Schedules a chunk rebuild for the render belonging to the given chunk section position.
      */
     public void scheduleRebuildForChunk(int x, int y, int z, boolean important) {
+        if(chunkRenderManager == null) {
+            initRenderer();
+        }
         this.chunkRenderManager.scheduleRebuild(x, y, z, important);
     }
 

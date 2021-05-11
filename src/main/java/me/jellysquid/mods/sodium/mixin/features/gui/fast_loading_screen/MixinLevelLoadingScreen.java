@@ -123,7 +123,13 @@ public class MixinLevelLoadingScreen {
     private static void addRect(Matrix4f matrix, BasicScreenQuadVertexSink sink, int x1, int y1, int x2, int y2, int color) {
         sink.writeQuad(matrix, x1, y2, 0, color);
         sink.writeQuad(matrix, x2, y2, 0, color);
-        sink.writeQuad(matrix, x2, y1, 0, color);
+
         sink.writeQuad(matrix, x1, y1, 0, color);
+        sink.writeQuad(matrix, x1, y1, 0, color);
+        sink.writeQuad(matrix, x2, y2, 0, color);
+        sink.writeQuad(matrix, x2, y1, 0, color);
+
+       // sink.writeQuad(matrix, x2, y1, 0, color);
+       // sink.writeQuad(matrix, x1, y1, 0, color);
     }
 }
