@@ -54,9 +54,15 @@ public abstract class ChunkRenderBackendOneshot<T extends ChunkOneshotGraphicsSt
     }
 
     @Override
-    protected GlShader createVertexShader(ChunkFogMode fogMode, BlockRenderPass pass) {
+    protected GlShader createVertexShader(ChunkFogMode fogMode, BlockRenderPass pass, boolean shadow) {
         if (pipeline != null) {
-            Optional<String> irisVertexShader = pass.isTranslucent() ? pipeline.getTranslucentVertexShaderSource() : pipeline.getTerrainVertexShaderSource();
+            Optional<String> irisVertexShader;
+
+            if (shadow) {
+                irisVertexShader = pipeline.getShadowVertexShaderSource();
+            } else {
+                irisVertexShader = pass.isTranslucent() ? pipeline.getTranslucentVertexShaderSource() : pipeline.getTerrainVertexShaderSource();
+            }
 
             if (irisVertexShader.isPresent()) {
                 return new GlShader(ShaderType.VERTEX, new Identifier("iris", "sodium-terrain.vsh"), irisVertexShader.get(), ShaderConstants.builder().build());
@@ -67,9 +73,15 @@ public abstract class ChunkRenderBackendOneshot<T extends ChunkOneshotGraphicsSt
     }
 
     @Override
-    protected GlShader createFragmentShader(ChunkFogMode fogMode, BlockRenderPass pass) {
+    protected GlShader createFragmentShader(ChunkFogMode fogMode, BlockRenderPass pass, boolean shadow) {
         if (pipeline != null) {
-            Optional<String> irisFragmentShader = pass.isTranslucent() ? pipeline.getTranslucentFragmentShaderSource() : pipeline.getTerrainFragmentShaderSource();
+            Optional<String> irisFragmentShader;
+
+            if (shadow) {
+                irisFragmentShader = pipeline.getShadowFragmentShaderSource();
+            } else {
+                irisFragmentShader = pass.isTranslucent() ? pipeline.getTranslucentFragmentShaderSource() : pipeline.getTerrainFragmentShaderSource();
+            }
 
             if (irisFragmentShader.isPresent()) {
                 return new GlShader(ShaderType.FRAGMENT, new Identifier("iris", "sodium-terrain.fsh"), irisFragmentShader.get(), ShaderConstants.builder().build());

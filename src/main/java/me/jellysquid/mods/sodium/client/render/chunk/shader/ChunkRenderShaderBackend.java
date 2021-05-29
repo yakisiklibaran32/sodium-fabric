@@ -9,6 +9,7 @@ import me.jellysquid.mods.sodium.client.render.chunk.ChunkRenderBackend;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkMeshAttribute;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 
+import net.coderbot.iris.shadows.ShadowRenderingStatus;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 
@@ -17,6 +18,7 @@ import java.util.EnumMap;
 public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState, P extends ChunkProgram>
         implements ChunkRenderBackend<T> {
     private final EnumMap<ChunkFogMode, EnumMap<BlockRenderPass, P>> programs = new EnumMap<>(ChunkFogMode.class);
+    private final EnumMap<ChunkFogMode, EnumMap<BlockRenderPass, P>> shadowPrograms = new EnumMap<>(ChunkFogMode.class);
 
     protected final ChunkVertexType vertexType;
     protected final GlVertexFormat<ChunkMeshAttribute> vertexFormat;
@@ -31,26 +33,27 @@ public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState, P e
     @Override
     public final void createShaders() {
         for (ChunkFogMode fogMode : ChunkFogMode.values()) {
-            this.programs.put(fogMode, createShadersForFogMode(fogMode));
+            this.programs.put(fogMode, createShadersForFogMode(fogMode, false));
+            this.shadowPrograms.put(fogMode, createShadersForFogMode(fogMode, true));
         }
     }
 
-    private final EnumMap<BlockRenderPass, P> createShadersForFogMode(ChunkFogMode mode) {
+    private EnumMap<BlockRenderPass, P> createShadersForFogMode(ChunkFogMode mode, boolean shadow) {
         EnumMap<BlockRenderPass, P> shaders = new EnumMap<>(BlockRenderPass.class);
 
         for (BlockRenderPass pass : BlockRenderPass.VALUES) {
-            shaders.put(pass, this.createShader(mode, pass, this.vertexFormat));
+            shaders.put(pass, this.createShader(mode, pass, this.vertexFormat, shadow));
         }
 
         return shaders;
     }
 
-    private P createShader(ChunkFogMode fogMode, BlockRenderPass pass, GlVertexFormat<ChunkMeshAttribute> format) {
-        GlShader vertShader = this.createVertexShader(fogMode, pass);
-        GlShader fragShader = this.createFragmentShader(fogMode, pass);
+    private P createShader(ChunkFogMode fogMode, BlockRenderPass pass, GlVertexFormat<ChunkMeshAttribute> format, boolean shadow) {
+        GlShader vertShader = this.createVertexShader(fogMode, pass, shadow);
+        GlShader fragShader = this.createFragmentShader(fogMode, pass, shadow);
 
         try {
-            return GlProgram.builder(new Identifier("sodium", "chunk_shader_for_" + pass.toString().toLowerCase()))
+            return GlProgram.builder(new Identifier("sodium", "chunk_shader_for_" + pass.toString().toLowerCase() + (shadow ? "_gbuffer" : "_shadow")))
                     .attachShader(vertShader)
                     .attachShader(fragShader)
                     .bindAttribute("a_Pos", format.getAttribute(ChunkMeshAttribute.POSITION))
@@ -70,15 +73,20 @@ public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState, P e
         }
     }
 
-    protected abstract GlShader createFragmentShader(ChunkFogMode fogMode, BlockRenderPass pass);
+    protected abstract GlShader createFragmentShader(ChunkFogMode fogMode, BlockRenderPass pass, boolean shadow);
 
-    protected abstract GlShader createVertexShader(ChunkFogMode fogMode, BlockRenderPass pass);
+    protected abstract GlShader createVertexShader(ChunkFogMode fogMode, BlockRenderPass pass, boolean shadow);
 
     protected abstract P createShaderProgram(Identifier name, int handle, ChunkFogMode fogMode, BlockRenderPass pass);
 
     @Override
     public void begin(MatrixStack matrixStack, BlockRenderPass pass) {
-        this.activeProgram = this.programs.get(ChunkFogMode.getActiveMode()).get(pass);
+        if (ShadowRenderingStatus.areShadowsCurrentlyBeingRendered()) {
+            this.activeProgram = this.shadowPrograms.get(ChunkFogMode.getActiveMode()).get(pass);
+        } else {
+            this.activeProgram = this.programs.get(ChunkFogMode.getActiveMode()).get(pass);
+        }
+
         this.activeProgram.bind();
         this.activeProgram.setup(matrixStack, this.vertexType.getModelScale(), this.vertexType.getTextureScale());
     }
@@ -92,6 +100,12 @@ public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState, P e
     @Override
     public void delete() {
         for (EnumMap<BlockRenderPass, P> shaders: this.programs.values()) {
+            for (P shader : shaders.values()) {
+                shader.delete();
+            }
+        }
+
+        for (EnumMap<BlockRenderPass, P> shaders: this.shadowPrograms.values()) {
             for (P shader : shaders.values()) {
                 shader.delete();
             }

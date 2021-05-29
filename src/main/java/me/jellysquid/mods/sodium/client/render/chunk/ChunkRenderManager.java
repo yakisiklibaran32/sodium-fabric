@@ -27,6 +27,7 @@ import me.jellysquid.mods.sodium.client.world.ChunkStatusListener;
 import me.jellysquid.mods.sodium.common.util.DirectionUtil;
 import me.jellysquid.mods.sodium.common.util.IdTable;
 import me.jellysquid.mods.sodium.common.util.collections.FutureDequeDrain;
+import net.coderbot.iris.shadows.ShadowRenderingStatus;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.util.math.MatrixStack;
@@ -71,10 +72,10 @@ public class ChunkRenderManager<T extends ChunkGraphicsState> implements ChunkSt
     private final ObjectArrayFIFOQueue<ChunkRenderContainer<T>> rebuildQueue = new ObjectArrayFIFOQueue<>();
 
     @SuppressWarnings("unchecked")
-    private final ChunkRenderList<T>[] chunkRenderLists = new ChunkRenderList[BlockRenderPass.COUNT];
-    private final ObjectList<ChunkRenderContainer<T>> tickableChunks = new ObjectArrayList<>();
+    private ChunkRenderList<T>[] chunkRenderLists = new ChunkRenderList[BlockRenderPass.COUNT];
+    private ObjectList<ChunkRenderContainer<T>> tickableChunks = new ObjectArrayList<>();
 
-    private final ObjectList<BlockEntity> visibleBlockEntities = new ObjectArrayList<>();
+    private ObjectList<BlockEntity> visibleBlockEntities = new ObjectArrayList<>();
 
     private final SodiumWorldRenderer renderer;
     private final ClientWorld world;
@@ -90,6 +91,12 @@ public class ChunkRenderManager<T extends ChunkGraphicsState> implements ChunkSt
     private boolean useFogCulling;
     private double fogRenderCutoff;
 
+    private ChunkRenderList<T>[] chunkRenderListsSwap = new ChunkRenderList[BlockRenderPass.COUNT];
+    private ObjectList<ChunkRenderContainer<T>> tickableChunksSwap = new ObjectArrayList<>();
+    private ObjectList<BlockEntity> visibleBlockEntitiesSwap = new ObjectArrayList<>();
+    private int visibleChunkCountSwap;
+    private boolean dirtySwap;
+
     public ChunkRenderManager(SodiumWorldRenderer renderer, ChunkRenderBackend<T> backend, BlockRenderPassManager renderPassManager, ClientWorld world, int renderDistance) {
         this.backend = backend;
         this.renderer = renderer;
@@ -99,13 +106,40 @@ public class ChunkRenderManager<T extends ChunkGraphicsState> implements ChunkSt
         this.builder.init(world, renderPassManager);
 
         this.dirty = true;
+        this.dirtySwap = true;
 
         for (int i = 0; i < this.chunkRenderLists.length; i++) {
             this.chunkRenderLists[i] = new ChunkRenderList<>();
         }
 
+        for (int i = 0; i < this.chunkRenderListsSwap.length; i++) {
+            this.chunkRenderListsSwap[i] = new ChunkRenderList<>();
+        }
+
         this.culler = new ChunkGraphCuller(world, renderDistance);
         this.useChunkFaceCulling = SodiumClientMod.options().advanced.useChunkFaceCulling;
+    }
+
+    public void swapState() {
+        ChunkRenderList<T>[] chunkRenderListsTmp = chunkRenderLists;
+        chunkRenderLists = chunkRenderListsSwap;
+        chunkRenderListsSwap = chunkRenderListsTmp;
+
+        ObjectList<ChunkRenderContainer<T>> tickableChunksTmp = tickableChunks;
+        tickableChunks = tickableChunksSwap;
+        tickableChunksSwap = tickableChunksTmp;
+
+        ObjectList<BlockEntity> visibleBlockEntitiesTmp = visibleBlockEntities;
+        visibleBlockEntities = visibleBlockEntitiesSwap;
+        visibleBlockEntitiesSwap = visibleBlockEntitiesTmp;
+
+        int visibleChunkCountTmp = visibleChunkCount;
+        visibleChunkCount = visibleChunkCountSwap;
+        visibleChunkCountSwap = visibleChunkCountTmp;
+
+        boolean dirtyTmp = dirty;
+        dirty = dirtySwap;
+        dirtySwap = dirtyTmp;
     }
 
     public void update(Camera camera, FrustumExtended frustum, int frame, boolean spectator) {
@@ -149,11 +183,13 @@ public class ChunkRenderManager<T extends ChunkGraphicsState> implements ChunkSt
     }
 
     private void addChunk(ChunkRenderContainer<T> render) {
-        if (render.needsRebuild() && render.canRebuild()) {
-            if (render.needsImportantRebuild()) {
-                this.importantRebuildQueue.enqueue(render);
-            } else {
-                this.rebuildQueue.enqueue(render);
+        if (!ShadowRenderingStatus.areShadowsCurrentlyBeingRendered()) {
+            if (render.needsRebuild() && render.canRebuild()) {
+                if (render.needsImportantRebuild() && !ShadowRenderingStatus.areShadowsCurrentlyBeingRendered()) {
+                    this.importantRebuildQueue.enqueue(render);
+                } else {
+                    this.rebuildQueue.enqueue(render);
+                }
             }
         }
 
@@ -199,7 +235,8 @@ public class ChunkRenderManager<T extends ChunkGraphicsState> implements ChunkSt
 
     private int computeVisibleFaces(ChunkRenderContainer<T> render) {
         // If chunk face culling is disabled, render all faces
-        if (!this.useChunkFaceCulling) {
+        // TODO: Enable chunk face culling during the shadow pass
+        if (!this.useChunkFaceCulling || ShadowRenderingStatus.areShadowsCurrentlyBeingRendered()) {
             return ChunkFaceFlags.ALL;
         }
 
@@ -254,8 +291,10 @@ public class ChunkRenderManager<T extends ChunkGraphicsState> implements ChunkSt
     }
 
     private void reset() {
-        this.rebuildQueue.clear();
-        this.importantRebuildQueue.clear();
+        if (!ShadowRenderingStatus.areShadowsCurrentlyBeingRendered()) {
+            this.rebuildQueue.clear();
+            this.importantRebuildQueue.clear();
+        }
 
         this.visibleBlockEntities.clear();
 
