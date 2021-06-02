@@ -6,6 +6,7 @@ import me.jellysquid.mods.sodium.client.gui.options.control.ControlElement;
 import me.jellysquid.mods.sodium.client.gui.options.storage.OptionStorage;
 import me.jellysquid.mods.sodium.client.gui.widgets.FlatButtonWidget;
 import me.jellysquid.mods.sodium.client.util.Dim2i;
+import net.coderbot.iris.gui.screen.ShaderPackScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
@@ -108,6 +109,13 @@ public class SodiumOptionsGUI extends Screen {
 
             this.children.add(button);
         }
+        String shaderPacks = new TranslatableText("options.iris.shaderPackSelection").getString();
+        int shaderWidth = 10 + this.textRenderer.getWidth(shaderPacks); 
+        FlatButtonWidget irisButton = new FlatButtonWidget(new Dim2i(x, y, shaderWidth, 16), shaderPacks, () -> client.openScreen(new ShaderPackScreen(this)));
+
+        x += shaderWidth + 6; // In case someone mixes in here
+
+        this.children.add(irisButton);
     }
 
     private void rebuildGUIOptions() {
