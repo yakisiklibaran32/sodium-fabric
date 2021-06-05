@@ -1,5 +1,6 @@
 package me.jellysquid.mods.sodium.client.render.chunk.shader;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexFormat;
 import me.jellysquid.mods.sodium.client.gl.shader.GlProgram;
 import me.jellysquid.mods.sodium.client.gl.shader.GlShader;
@@ -83,6 +84,10 @@ public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState, P e
     public void begin(MatrixStack matrixStack, BlockRenderPass pass) {
         if (ShadowRenderingStatus.areShadowsCurrentlyBeingRendered()) {
             this.activeProgram = this.shadowPrograms.get(ChunkFogMode.getActiveMode()).get(pass);
+
+            // No back face culling during the shadow pass
+            // TODO: Hopefully this won't be necessary in the future...
+            RenderSystem.disableCull();
         } else {
             this.activeProgram = this.programs.get(ChunkFogMode.getActiveMode()).get(pass);
         }
