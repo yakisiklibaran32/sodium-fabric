@@ -178,7 +178,11 @@ public class MultidrawChunkRenderBackend extends ChunkRenderShaderBackend<Multid
                         new GlVertexAttributeBinding(ChunkShaderBindingPoints.TEX_COORD,
                                 this.vertexFormat.getAttribute(ChunkMeshAttribute.TEXTURE)),
                         new GlVertexAttributeBinding(ChunkShaderBindingPoints.LIGHT_COORD,
-                                this.vertexFormat.getAttribute(ChunkMeshAttribute.LIGHT))
+                                this.vertexFormat.getAttribute(ChunkMeshAttribute.LIGHT)),
+                        new GlVertexAttributeBinding(ChunkShaderBindingPoints.BLOCK_ID, vertexFormat.getAttribute(ChunkMeshAttribute.BLOCK_ID)),
+                        new GlVertexAttributeBinding(ChunkShaderBindingPoints.MID_TEX_COORD, vertexFormat.getAttribute(ChunkMeshAttribute.MID_TEX_COORD)),
+                        new GlVertexAttributeBinding(ChunkShaderBindingPoints.TANGENT, vertexFormat.getAttribute(ChunkMeshAttribute.TANGENT)),
+                        new GlVertexAttributeBinding(ChunkShaderBindingPoints.NORMAL, vertexFormat.getAttribute(ChunkMeshAttribute.NORMAL))
                 }, false),
                 new TessellationBinding(this.uniformBuffer, new GlVertexAttributeBinding[] {
                         new GlVertexAttributeBinding(ChunkShaderBindingPoints.MODEL_OFFSET,

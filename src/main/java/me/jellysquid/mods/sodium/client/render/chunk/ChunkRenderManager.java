@@ -29,7 +29,8 @@ import me.jellysquid.mods.sodium.client.world.ChunkStatusListener;
 import me.jellysquid.mods.sodium.common.util.DirectionUtil;
 import me.jellysquid.mods.sodium.common.util.IdTable;
 import me.jellysquid.mods.sodium.common.util.collections.FutureDequeDrain;
-import net.coderbot.iris.shadows.ShadowRenderingStatus;
+import net.coderbot.iris.Iris;
+import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.util.math.MatrixStack;
@@ -165,7 +166,7 @@ public class ChunkRenderManager<T extends ChunkGraphicsState> implements ChunkSt
         this.useFogCulling = false;
 
         // Iris: disable fog culling when shaders are enabled since shaderpacks aren't guaranteed to actually implement fog.
-        if (SodiumClientMod.options().advanced.useFogOcclusion) {
+        if (SodiumClientMod.options().advanced.useFogOcclusion && !Iris.getCurrentPack().isPresent()) {
             float dist = LegacyFogHelper.getFogCutoff() + FOG_PLANE_OFFSET;
 
             if (dist != 0.0f) {
@@ -187,9 +188,9 @@ public class ChunkRenderManager<T extends ChunkGraphicsState> implements ChunkSt
     }
 
     private void addChunk(ChunkRenderContainer<T> render) {
-        if (!ShadowRenderingStatus.areShadowsCurrentlyBeingRendered()) {
+        if (!ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
             if (render.needsRebuild() && render.canRebuild()) {
-                if (render.needsImportantRebuild() && !ShadowRenderingStatus.areShadowsCurrentlyBeingRendered()) {
+                if (render.needsImportantRebuild() && !ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
                     this.importantRebuildQueue.enqueue(render);
                 } else {
                     this.rebuildQueue.enqueue(render);
@@ -240,7 +241,7 @@ public class ChunkRenderManager<T extends ChunkGraphicsState> implements ChunkSt
     private int computeVisibleFaces(ChunkRenderContainer<T> render) {
         // If chunk face culling is disabled, render all faces
         // TODO: Enable chunk face culling during the shadow pass
-        if (!this.useChunkFaceCulling || ShadowRenderingStatus.areShadowsCurrentlyBeingRendered()) {
+        if (!this.useChunkFaceCulling || ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
             return ChunkFaceFlags.ALL;
         }
 
@@ -295,7 +296,7 @@ public class ChunkRenderManager<T extends ChunkGraphicsState> implements ChunkSt
     }
 
     private void reset() {
-        if (!ShadowRenderingStatus.areShadowsCurrentlyBeingRendered()) {
+        if (!ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
             this.rebuildQueue.clear();
             this.importantRebuildQueue.clear();
         }

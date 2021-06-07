@@ -2,11 +2,8 @@ package me.jellysquid.mods.sodium.client.render.chunk.shader;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexFormat;
-import me.jellysquid.mods.sodium.client.gl.shader.GlProgram;
-import me.jellysquid.mods.sodium.client.gl.shader.GlShader;
+import me.jellysquid.mods.sodium.client.gl.shader.*;
 import me.jellysquid.mods.sodium.client.gl.device.RenderDevice;
-import me.jellysquid.mods.sodium.client.gl.shader.ShaderLoader;
-import me.jellysquid.mods.sodium.client.gl.shader.ShaderType;
 import me.jellysquid.mods.sodium.client.gl.compat.LegacyFogHelper;
 import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import me.jellysquid.mods.sodium.client.render.chunk.ChunkGraphicsState;
@@ -14,16 +11,23 @@ import me.jellysquid.mods.sodium.client.render.chunk.ChunkRenderBackend;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkMeshAttribute;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 
-import net.coderbot.iris.shadows.ShadowRenderingStatus;
+import net.coderbot.iris.gl.program.ProgramUniforms;
+import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
+import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumMap;
+import java.util.Optional;
 
 public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState>
         implements ChunkRenderBackend<T> {
     private final EnumMap<ChunkFogMode, EnumMap<BlockRenderPass, ChunkProgram>> programs = new EnumMap<>(ChunkFogMode.class);
     private final EnumMap<ChunkFogMode, EnumMap<BlockRenderPass, ChunkProgram>> shadowPrograms = new EnumMap<>(ChunkFogMode.class);
+
+    @Nullable
+    private final SodiumTerrainPipeline pipeline = SodiumTerrainPipeline.create().orElse(null);
 
     protected final ChunkVertexType vertexType;
     protected final GlVertexFormat<ChunkMeshAttribute> vertexFormat;
@@ -35,12 +39,50 @@ public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState>
         this.vertexFormat = vertexType.getCustomVertexFormat();
     }
 
-    private ChunkProgram createShader(RenderDevice device, ChunkFogMode fogMode, GlVertexFormat<ChunkMeshAttribute> vertexFormat) {
-        GlShader vertShader = ShaderLoader.loadShader(device, ShaderType.VERTEX,
-                new Identifier("sodium", "chunk_gl20.v.glsl"), fogMode.getDefines());
+    private GlShader createVertexShader(RenderDevice device, ChunkFogMode fogMode, BlockRenderPass pass, boolean shadow) {
+        if (pipeline != null) {
+            Optional<String> irisVertexShader;
 
-        GlShader fragShader = ShaderLoader.loadShader(device, ShaderType.FRAGMENT,
+            if (shadow) {
+                irisVertexShader = pipeline.getShadowVertexShaderSource();
+            } else {
+                irisVertexShader = pass.isTranslucent() ? pipeline.getTranslucentVertexShaderSource() : pipeline.getTerrainVertexShaderSource();
+            }
+
+            if (irisVertexShader.isPresent()) {
+                return new GlShader(device, ShaderType.VERTEX, new Identifier("iris", "sodium-terrain.vsh"),
+                        irisVertexShader.get(), ShaderConstants.builder().build());
+            }
+        }
+
+        return ShaderLoader.loadShader(device, ShaderType.VERTEX,
+                new Identifier("sodium", "chunk_gl20.v.glsl"), fogMode.getDefines());
+    }
+
+    private GlShader createFragmentShader(RenderDevice device, ChunkFogMode fogMode, BlockRenderPass pass, boolean shadow) {
+        if (pipeline != null) {
+            Optional<String> irisFragmentShader;
+
+            if (shadow) {
+                irisFragmentShader = pipeline.getShadowFragmentShaderSource();
+            } else {
+                irisFragmentShader = pass.isTranslucent() ? pipeline.getTranslucentFragmentShaderSource() : pipeline.getTerrainFragmentShaderSource();
+            }
+
+            if (irisFragmentShader.isPresent()) {
+                return new GlShader(device, ShaderType.FRAGMENT, new Identifier("iris", "sodium-terrain.fsh"),
+                        irisFragmentShader.get(), ShaderConstants.builder().build());
+            }
+        }
+
+        return ShaderLoader.loadShader(device, ShaderType.FRAGMENT,
                 new Identifier("sodium", "chunk_gl20.f.glsl"), fogMode.getDefines());
+    }
+
+    private ChunkProgram createShader(RenderDevice device, ChunkFogMode fogMode, BlockRenderPass pass,
+                                      GlVertexFormat<ChunkMeshAttribute> vertexFormat, boolean shadow) {
+        GlShader vertShader = createVertexShader(device, fogMode, pass, shadow);
+        GlShader fragShader = createFragmentShader(device, fogMode, pass, shadow);
 
         try {
             return GlProgram.builder(new Identifier("sodium", "chunk_shader_for_" + pass.toString().toLowerCase() + (shadow ? "_gbuffer" : "_shadow")))
@@ -55,7 +97,15 @@ public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState>
                     .bindAttribute("at_tangent", ChunkShaderBindingPoints.TANGENT)
                     .bindAttribute("a_Normal", ChunkShaderBindingPoints.NORMAL)
                     .bindAttribute("d_ModelOffset", ChunkShaderBindingPoints.MODEL_OFFSET)
-                    .build((program, name) -> new ChunkProgram(device, program, name, fogMode.getFactory()));
+                    .build((program, name) -> {
+                        ProgramUniforms uniforms = null;
+
+                        if (pipeline != null) {
+                            uniforms = pipeline.initUniforms(name);
+                        }
+
+                        return new ChunkProgram(device, program, name, fogMode.getFactory(), uniforms);
+                    });
         } finally {
             vertShader.delete();
             fragShader.delete();
@@ -70,8 +120,8 @@ public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState>
         }
     }
 
-    private EnumMap<BlockRenderPass, P> createShadersForFogMode(RenderDevice device, ChunkFogMode mode, boolean shadow) {
-        EnumMap<BlockRenderPass, P> shaders = new EnumMap<>(BlockRenderPass.class);
+    private EnumMap<BlockRenderPass, ChunkProgram> createShadersForFogMode(RenderDevice device, ChunkFogMode mode, boolean shadow) {
+        EnumMap<BlockRenderPass, ChunkProgram> shaders = new EnumMap<>(BlockRenderPass.class);
 
         for (BlockRenderPass pass : BlockRenderPass.VALUES) {
             shaders.put(pass, this.createShader(device, mode, pass, this.vertexFormat, shadow));
@@ -82,7 +132,7 @@ public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState>
 
     @Override
     public void begin(MatrixStack matrixStack, BlockRenderPass pass) {
-        if (ShadowRenderingStatus.areShadowsCurrentlyBeingRendered()) {
+        if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
             this.activeProgram = this.shadowPrograms.get(LegacyFogHelper.getFogMode()).get(pass);
 
             // No back face culling during the shadow pass

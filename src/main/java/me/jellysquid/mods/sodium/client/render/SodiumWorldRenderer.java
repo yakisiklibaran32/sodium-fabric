@@ -22,7 +22,7 @@ import me.jellysquid.mods.sodium.client.util.math.FrustumExtended;
 import me.jellysquid.mods.sodium.client.world.ChunkStatusListener;
 import me.jellysquid.mods.sodium.client.world.ChunkStatusListenerManager;
 import me.jellysquid.mods.sodium.common.util.ListUtil;
-import net.coderbot.iris.shadows.ShadowRenderingStatus;
+import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -162,7 +162,7 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
     private boolean wasRenderingShadows = false;
 
     public void restoreStateIfShadowsWereBeingRendered() {
-        if (wasRenderingShadows && !ShadowRenderingStatus.areShadowsCurrentlyBeingRendered()) {
+        if (wasRenderingShadows && !ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
             this.chunkRenderManager.swapState();
             wasRenderingShadows = false;
         }
@@ -180,7 +180,7 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
             this.reload();
         }
 
-        if (!wasRenderingShadows && ShadowRenderingStatus.areShadowsCurrentlyBeingRendered()) {
+        if (!wasRenderingShadows && ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
             this.chunkRenderManager.swapState();
             wasRenderingShadows = true;
         }
@@ -201,7 +201,7 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
         boolean dirty = pos.x != this.lastCameraX || pos.y != this.lastCameraY || pos.z != this.lastCameraZ ||
                 pitch != this.lastCameraPitch || yaw != this.lastCameraYaw;
 
-        if (ShadowRenderingStatus.areShadowsCurrentlyBeingRendered()) {
+        if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
             // TODO: Detect when the sun/moon isn't moving
             dirty = true;
         }
@@ -218,7 +218,7 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
 
         profiler.swap("chunk_update");
 
-        if (!ShadowRenderingStatus.areShadowsCurrentlyBeingRendered()) {
+        if (!ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
             this.chunkRenderManager.updateChunks();
         }
 
