@@ -80,7 +80,7 @@ public class ChunkRenderRebuildTask<T extends ChunkGraphicsState> extends ChunkR
                     buffers.setRenderOffset(pos.getX() - renderOffset.getX(), pos.getY() - renderOffset.getY(), pos.getZ() - renderOffset.getZ());
 
                     if (blockState.getRenderType() == BlockRenderType.MODEL) {
-                        buffers.setMaterialId(blockState);
+                        buffers.setMaterialId(blockState, (short) -1);
 
                         RenderLayer layer = RenderLayers.getBlockLayer(blockState);
 
@@ -99,7 +99,8 @@ public class ChunkRenderRebuildTask<T extends ChunkGraphicsState> extends ChunkR
                     FluidState fluidState = blockState.getFluidState();
 
                     if (!fluidState.isEmpty()) {
-                        buffers.setMaterialId(fluidState.getBlockState());
+                        // All fluids have a ShadersMod render type of 1, to match behavior of Minecraft 1.7 and earlier.
+                        buffers.setMaterialId(fluidState.getBlockState(), (short) 1);
 
                         RenderLayer layer = RenderLayers.getFluidLayer(fluidState);
 

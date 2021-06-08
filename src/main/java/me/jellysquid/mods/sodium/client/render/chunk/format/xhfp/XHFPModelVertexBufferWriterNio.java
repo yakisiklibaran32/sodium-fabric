@@ -36,6 +36,7 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
         vSum += v;
 
         short materialId = idHolder.id;
+        short renderType = idHolder.renderType;
 
         this.writeQuadInternal(
                 ModelVertexUtil.denormalizeVertexPositionFloatAsShort(x),
@@ -45,11 +46,13 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
                 ModelVertexUtil.denormalizeVertexTextureFloatAsShort(u),
                 ModelVertexUtil.denormalizeVertexTextureFloatAsShort(v),
                 ModelVertexUtil.encodeLightMapTexCoord(light),
-                materialId
+                materialId,
+                renderType
         );
     }
 
-    private void writeQuadInternal(short x, short y, short z, int color, short u, short v, int light, short materialId) {
+    private void writeQuadInternal(short x, short y, short z, int color, short u, short v, int light, short materialId,
+                                   short renderType) {
         int i = this.writeOffset;
 
         vertexCount++;
@@ -66,7 +69,7 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
         // NB: We don't set midTexCoord, normal, and tangent here, they will be filled in later.
         // block ID
         buffer.putFloat(i + 32, materialId);
-        buffer.putFloat(i + 36, (short) 0);
+        buffer.putFloat(i + 36, renderType);
         buffer.putFloat(i + 40, (short) 0);
         buffer.putFloat(i + 44, (short) 0);
 

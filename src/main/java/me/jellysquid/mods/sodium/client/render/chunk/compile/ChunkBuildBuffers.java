@@ -138,8 +138,8 @@ public class ChunkBuildBuffers {
         this.offset.set(x, y, z);
     }
 
-    public void setMaterialId(BlockState state) {
-        this.idHolder.set(state);
+    public void setMaterialId(BlockState state, short renderType) {
+        this.idHolder.set(state, renderType);
     }
 
     public void resetMaterialId() {
