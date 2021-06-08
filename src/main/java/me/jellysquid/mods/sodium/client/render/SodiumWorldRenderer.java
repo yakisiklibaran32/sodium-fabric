@@ -147,6 +147,7 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
     public void scheduleTerrainUpdate() {
         // BUG: seems to be called before init
         if (this.chunkRenderManager != null) {
+            this.ensureStateSwapped();
             this.chunkRenderManager.markDirty();
         }
     }
@@ -167,6 +168,13 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
         }
     }
 
+    private void ensureStateSwapped() {
+        if (!wasRenderingShadows && ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+            this.chunkRenderManager.swapState();
+            wasRenderingShadows = true;
+        }
+    }
+
     /**
      * Called prior to any chunk rendering in order to update necessary state.
      */
@@ -175,10 +183,7 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
 
         this.useEntityCulling = SodiumClientMod.options().advanced.useAdvancedEntityCulling;
 
-        if (!wasRenderingShadows && ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-            this.chunkRenderManager.swapState();
-            wasRenderingShadows = true;
-        }
+        ensureStateSwapped();
 
         Profiler profiler = this.client.getProfiler();
         profiler.push("camera_setup");
