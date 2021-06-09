@@ -19,6 +19,7 @@ import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumMap;
+import java.util.Locale;
 import java.util.Optional;
 
 public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState>
@@ -85,7 +86,7 @@ public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState>
         GlShader fragShader = createFragmentShader(device, fogMode, pass, shadow);
 
         try {
-            return GlProgram.builder(new Identifier("sodium", "chunk_shader_for_" + pass.toString().toLowerCase() + (shadow ? "_gbuffer" : "_shadow")))
+            return GlProgram.builder(new Identifier("sodium", "chunk_shader_for_" + pass.toString().toLowerCase(Locale.ROOT) + (shadow ? "_gbuffer" : "_shadow")))
                     .attachShader(vertShader)
                     .attachShader(fragShader)
                     .bindAttribute("a_Pos", ChunkShaderBindingPoints.POSITION)
