@@ -141,8 +141,8 @@ public class SodiumOptionsGUI extends Screen {
             this.children.add(button);
         }
         String shaderPacks = new TranslatableText("options.iris.shaderPackSelection").getString();
-        int shaderWidth = 10 + this.textRenderer.getWidth(shaderPacks); 
-        FlatButtonWidget irisButton = new FlatButtonWidget(new Dim2i(x, y, shaderWidth, 16), shaderPacks, () -> client.openScreen(new ShaderPackScreen(this)));
+        int shaderWidth = 12 + this.textRenderer.getWidth(shaderPacks);
+        FlatButtonWidget irisButton = new FlatButtonWidget(new Dim2i(x, y, shaderWidth, 18), shaderPacks, () -> client.openScreen(new ShaderPackScreen(this)));
 
         x += shaderWidth + 6; // In case someone mixes in here
 
