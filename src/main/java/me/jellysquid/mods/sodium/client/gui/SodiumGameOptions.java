@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 public class SodiumGameOptions {
     public final QualitySettings quality = new QualitySettings();
     public final AdvancedSettings advanced = new AdvancedSettings();
+    public final NotificationSettings notifications = new NotificationSettings();
 
     private Path configPath;
 
@@ -28,17 +29,17 @@ public class SodiumGameOptions {
     }
 
     public static class AdvancedSettings {
-        public boolean useVertexArrays = true;
-        public boolean useMultidraw = true;
+        public boolean useVertexArrayObjects = true;
+        public boolean useChunkMultidraw = true;
 
         public boolean animateOnlyVisibleTextures = true;
-        public boolean useAdvancedEntityCulling = true;
+        public boolean useEntityCulling = true;
         public boolean useParticleCulling = true;
         public boolean useFogOcclusion = true;
         public boolean useCompactVertexFormat = true;
-        public boolean useChunkFaceCulling = true;
-        public boolean useMemoryIntrinsics = true;
-        public boolean disableDriverBlacklist = false;
+        public boolean useBlockFaceCulling = true;
+        public boolean allowDirectMemoryAccess = true;
+        public boolean ignoreDriverBlacklist = false;
     }
 
     public static class QualitySettings {
@@ -49,6 +50,10 @@ public class SodiumGameOptions {
         public boolean enableClouds = true;
 
         public LightingQuality smoothLighting = LightingQuality.HIGH;
+    }
+
+    public static class NotificationSettings {
+        public boolean hideDonationButton = false;
     }
 
     public enum GraphicsQuality implements TextProvider {

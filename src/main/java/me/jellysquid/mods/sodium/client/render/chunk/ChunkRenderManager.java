@@ -85,7 +85,7 @@ public class ChunkRenderManager<T extends ChunkGraphicsState> implements ChunkSt
     private final ClientWorld world;
 
     private final ChunkCuller culler;
-    private final boolean useChunkFaceCulling;
+    private final boolean useBlockFaceCulling;
 
     private float cameraX, cameraY, cameraZ;
     private boolean dirty;
@@ -121,7 +121,7 @@ public class ChunkRenderManager<T extends ChunkGraphicsState> implements ChunkSt
         }
 
         this.culler = new ChunkGraphCuller(world, renderDistance);
-        this.useChunkFaceCulling = SodiumClientMod.options().advanced.useChunkFaceCulling;
+        this.useBlockFaceCulling = SodiumClientMod.options().advanced.useBlockFaceCulling;
     }
 
     public void swapState() {
@@ -241,7 +241,7 @@ public class ChunkRenderManager<T extends ChunkGraphicsState> implements ChunkSt
     private int computeVisibleFaces(ChunkRenderContainer<T> render) {
         // If chunk face culling is disabled, render all faces
         // TODO: Enable chunk face culling during the shadow pass
-        if (!this.useChunkFaceCulling || ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+        if (!this.useBlockFaceCulling || ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
             return ChunkFaceFlags.ALL;
         }
 
