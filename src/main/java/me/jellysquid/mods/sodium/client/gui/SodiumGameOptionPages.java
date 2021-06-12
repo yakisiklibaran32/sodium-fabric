@@ -177,7 +177,7 @@ public class SodiumGameOptionPages {
                     .add(OptionImpl.createBuilder(SupportedGraphicsMode.class, vanillaOpts)
                             .setName("Graphics Quality")
                             .setTooltip("The default graphics quality controls some legacy options and is necessary for mod compatibility. If the options below are left to " +
-                                    "\"Default\", they will use this setting.")
+                                    "\"Default\", they will use this setting. Fabulous graphics are blocked while shaders are enabled.")
                             .setControl(option -> new CyclingControl<>(option, SupportedGraphicsMode.class, new String[] { "Fast", "Fancy"/*, "Fabulous"*/ }))
                             .setBinding(
                                     (opts, value) -> opts.graphicsMode = value.toVanilla(),
