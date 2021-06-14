@@ -97,8 +97,9 @@ public class ChunkRenderRebuildTask<T extends ChunkGraphicsState> extends ChunkR
 
                     if (!fluidState.isEmpty()) {
                         RenderLayer layer = RenderLayers.getFluidLayer(fluidState);
+                        BakedModel model = cache.getBlockModels().getModel(fluidState.getBlockState());
 
-                        if (cache.getFluidRenderer().render(slice, fluidState, pos, buffers.get(layer))) {
+                        if (cache.getFluidRenderer().render(slice, fluidState, pos, buffers.get(layer), model)) {
                             bounds.addBlock(relX, relY, relZ);
                         }
                     }

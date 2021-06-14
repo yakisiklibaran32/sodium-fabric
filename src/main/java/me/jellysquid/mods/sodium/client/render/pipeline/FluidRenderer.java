@@ -1,5 +1,6 @@
 package me.jellysquid.mods.sodium.client.render.pipeline;
 
+import me.jellysquid.mods.sodium.client.model.PrimitiveSink;
 import me.jellysquid.mods.sodium.client.model.light.LightMode;
 import me.jellysquid.mods.sodium.client.model.light.LightPipeline;
 import me.jellysquid.mods.sodium.client.model.light.LightPipelineProvider;
@@ -14,6 +15,7 @@ import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.ChunkModelB
 import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexSink;
 import me.jellysquid.mods.sodium.client.util.Norm3b;
 import me.jellysquid.mods.sodium.client.util.color.ColorABGR;
+import me.jellysquid.mods.sodium.client.util.rand.XoRoShiRoRandom;
 import me.jellysquid.mods.sodium.common.util.DirectionUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -23,6 +25,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.color.block.BlockColorProvider;
 import net.minecraft.client.color.world.BiomeColors;
 import net.minecraft.client.render.block.BlockModels;
+import net.minecraft.client.render.model.BakedModel;
+import net.minecraft.client.render.model.BakedQuad;
 import net.minecraft.client.render.model.ModelLoader;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.fluid.Fluid;
@@ -35,6 +39,9 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.BlockRenderView;
+
+import java.util.List;
+import java.util.Random;
 
 public class FluidRenderer {
     private static final BlockColorProvider FLUID_COLOR_PROVIDER = (state, world, pos, tintIndex) -> {
@@ -105,10 +112,11 @@ public class FluidRenderer {
         return true;
     }
 
-    public boolean render(BlockRenderView world, FluidState fluidState, BlockPos pos, ChunkModelBuffers buffers) {
+    public boolean render(BlockRenderView world, FluidState fluidState, BlockPos pos, ChunkModelBuffers buffers, BakedModel model) {
         int posX = pos.getX();
         int posY = pos.getY();
         int posZ = pos.getZ();
+        Random random = new XoRoShiRoRandom();
 
         Fluid fluid = fluidState.getFluid();
 
@@ -205,8 +213,11 @@ public class FluidRenderer {
             this.setVertex(quad, 2, 1.0F, h3, 1.0F, u3, v3);
             this.setVertex(quad, 3, 1.0F, h4, 0.0f, u4, v4);
 
+
+
+            List<BakedQuad> quadList = model.getQuads(fluidState.getBlockState(), Direction.UP, random);
             this.calculateQuadColors(quad, world, pos, lighter, Direction.UP, 1.0F, !lava);
-            this.flushQuad(buffers, quad, facing, false);
+            this.flushQuad(buffers, quad, facing, false, quadList);
 
             if (fluidState.method_15756(world, this.scratchPos.set(posX, posY + 1, posZ))) {
                 this.setVertex(quad, 3, 0.0f, h1, 0.0f, u1, v1);
@@ -214,7 +225,7 @@ public class FluidRenderer {
                 this.setVertex(quad, 1, 1.0F, h3, 1.0F, u3, v3);
                 this.setVertex(quad, 0, 1.0F, h4, 0.0f, u4, v4);
 
-                this.flushQuad(buffers, quad, ModelQuadFacing.DOWN, true);
+                this.flushQuad(buffers, quad, ModelQuadFacing.DOWN, true, model.getQuads(fluidState.getBlockState(), Direction.DOWN, random));
             }
 
             rendered = true;
@@ -235,7 +246,7 @@ public class FluidRenderer {
             this.setVertex(quad, 3, 1.0F, yOffset, 1.0F, maxU, maxV);
 
             this.calculateQuadColors(quad, world, pos, lighter, Direction.DOWN, 1.0F, !lava);
-            this.flushQuad(buffers, quad, ModelQuadFacing.DOWN, false);
+            this.flushQuad(buffers, quad, ModelQuadFacing.DOWN, false, model.getQuads(fluidState.getBlockState(), Direction.DOWN, random));
 
             rendered = true;
         }
@@ -335,7 +346,7 @@ public class FluidRenderer {
                 float br = dir.getAxis() == Direction.Axis.Z ? 0.8F : 0.6F;
 
                 this.calculateQuadColors(quad, world, pos, lighter, dir, br, !lava);
-                this.flushQuad(buffers, quad, ModelQuadFacing.fromDirection(dir), false);
+                this.flushQuad(buffers, quad, ModelQuadFacing.fromDirection(dir), false, model.getQuads(fluidState.getBlockState(), dir, random));
 
                 if (sprite != this.waterOverlaySprite) {
                     this.setVertex(quad, 0, x1, c1, z1, u1, v1);
@@ -343,7 +354,7 @@ public class FluidRenderer {
                     this.setVertex(quad, 2, x2, yOffset, z2, u2, v3);
                     this.setVertex(quad, 3, x2, c2, z2, u2, v2);
 
-                    this.flushQuad(buffers, quad, ModelQuadFacing.fromDirection(dir), true);
+                    this.flushQuad(buffers, quad, ModelQuadFacing.fromDirection(dir), true, model.getQuads(fluidState.getBlockState(), dir, random));
                 }
 
                 rendered = true;
@@ -368,7 +379,7 @@ public class FluidRenderer {
         }
     }
 
-    private void flushQuad(ChunkModelBuffers buffers, ModelQuadView quad, ModelQuadFacing facing, boolean flip) {
+    private void flushQuad(ChunkModelBuffers buffers, ModelQuadView quad, ModelQuadFacing facing, boolean flip, List<BakedQuad> quads) {
         int vertexIdx, lightOrder;
 
         if (flip) {
@@ -378,34 +389,46 @@ public class FluidRenderer {
             vertexIdx = 0;
             lightOrder = 1;
         }
+        PrimitiveSink<ModelVertexSink> sink = buffers.getBuilder(facing);
+        sink.vertices.ensureCapacity(quads.size() * 4);
+
 
 //        ModelVertexSink sink = buffers.getBuilder(facing);
 //        sink.ensureCapacity(4);
-//
-//        for (int i = 0; i < 4; i++) {
-//            float x = quad.getX(i);
-//            float y = quad.getY(i);
-//            float z = quad.getZ(i);
-//
-//            int color = this.quadColors[vertexIdx];
-//
-//            float u = quad.getTexU(i);
-//            float v = quad.getTexV(i);
-//
-//            int light = this.quadLightData.lm[vertexIdx];
-//
-//            sink.writeVertex(x, y, z, color, u, v, light);
-//
-//            vertexIdx += lightOrder;
-//        }
-//
-//        Sprite sprite = quad.getSprite();
-//
-//        if (sprite != null) {
-//            buffers.getRenderData().addSprite(sprite);
-//        }
+        int count = sink.vertices.getVertexCount();
+
+        for (int i = 0; i < 4; i++) {
+            float x = quad.getX(i);
+            float y = quad.getY(i);
+            float z = quad.getZ(i);
+
+            int color = this.quadColors[vertexIdx];
+
+            float u = quad.getTexU(i);
+            float v = quad.getTexV(i);
+
+            int light = this.quadLightData.lm[vertexIdx];
+
+            sink.vertices.writeVertex(x, y, z, color, u, v, light);
+
+            vertexIdx += lightOrder;
+        }
+        sink.indices.add(count + 0);
+        sink.indices.add(count + 1);
+        sink.indices.add(count + 2);
+
+        sink.indices.add(count + 2);
+        sink.indices.add(count + 3);
+        sink.indices.add(count + 0);
+
+        Sprite sprite = quad.getSprite();
+
+        if (sprite != null) {
+            buffers.getRenderData().addSprite(sprite);
+        }
 //
 //        sink.flush();
+        sink.vertices.flush();
     }
 
     private void setVertex(ModelQuadViewMutable quad, int i, float x, float y, float z, float u, float v) {

@@ -27,6 +27,8 @@ float getFogFactor() {
 void main() {
     // Block texture sample
     vec4 sampleBlockTex = texture2D(u_BlockTex, v_TexCoord);
+    if(sampleBlockTex.a < 0.1)
+    discard;
 
     // Light map texture sample
     vec4 sampleLightTex = texture2D(u_LightTex, v_LightCoord);
