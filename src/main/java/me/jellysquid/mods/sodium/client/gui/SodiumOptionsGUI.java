@@ -81,16 +81,21 @@ public class SodiumOptionsGUI extends Screen {
         this.applyButton = new FlatButtonWidget(new Dim2i(this.width - 142, this.height - 30, 65, 20), "Apply", this::applyChanges);
         this.closeButton = new FlatButtonWidget(new Dim2i(this.width - 73, this.height - 30, 65, 20), "Close", this::onClose);
 
-        this.addDrawable(this.undoButton);
-        this.addDrawable(this.applyButton);
-        this.addDrawable(this.closeButton);
-
-        for (Element element : this.children()) {
-            if (element instanceof Drawable) {
-                this.drawable.add((Drawable) element);
-            }
-        }
+        this.addDrawableNonSelectableChild(this.undoButton);
+        this.addDrawableNonSelectableChild(this.applyButton);
+        this.addDrawableNonSelectableChild(this.closeButton);
     }
+
+    private List<Element> mutableChildren() {
+        //noinspection unchecked
+        return (List<Element>) this.children();
+    }
+
+    private <T extends Element & Drawable> void addDrawableNonSelectableChild(T child) {
+        this.addDrawable(child);
+        this.mutableChildren().add(child);
+    }
+
 
     private void rebuildGUIPages() {
         int x = 10;
@@ -104,7 +109,7 @@ public class SodiumOptionsGUI extends Screen {
 
             x += width + 6;
 
-            this.addDrawable(button);
+            this.addDrawableNonSelectableChild(button);
         }
     }
 
@@ -118,7 +123,7 @@ public class SodiumOptionsGUI extends Screen {
                 Control<?> control = option.getControl();
                 ControlElement<?> element = control.createElement(new Dim2i(x, y, 200, 18));
 
-                this.addDrawable(element);
+                this.addDrawableNonSelectableChild(element);
 
                 // Move down to the next option
                 y += 18;
@@ -135,9 +140,7 @@ public class SodiumOptionsGUI extends Screen {
 
         this.updateControls();
 
-        for (Drawable drawable : this.drawable) {
-            drawable.render(matrixStack, mouseX, mouseY, delta);
-        }
+        super.render(matrixStack, mouseX, mouseY, delta);
 
         if (this.hoveredElement != null) {
             this.renderOptionTooltip(matrixStack, this.hoveredElement);

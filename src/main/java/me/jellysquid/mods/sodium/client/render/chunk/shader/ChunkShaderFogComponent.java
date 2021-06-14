@@ -46,8 +46,8 @@ public abstract class ChunkShaderFogComponent {
         public void setup() {
             ChunkShaderFogComponent.setupColorUniform(this.uFogColor);
 
-            float end = 0.0f;
-            float start = 128.0f;
+            float end = RenderSystem.getShaderFogEnd();
+            float start = RenderSystem.getShaderFogStart();
 
             GL20C.glUniform1f(this.uFogStart, start);
             GL20C.glUniform1f(this.uFogEnd, end);
@@ -59,7 +59,7 @@ public abstract class ChunkShaderFogComponent {
      * given binding index.
      */
     private static void setupColorUniform(int index) {
-//        GL20C.glUniform4fv(index, RenderSystem.getShaderFogColor());
+        GL20C.glUniform4fv(index, RenderSystem.getShaderFogColor());
     }
 
 }
