@@ -215,9 +215,8 @@ public class FluidRenderer {
 
 
 
-            List<BakedQuad> quadList = model.getQuads(fluidState.getBlockState(), Direction.UP, random);
             this.calculateQuadColors(quad, world, pos, lighter, Direction.UP, 1.0F, !lava);
-            this.flushQuad(buffers, quad, facing, false, quadList);
+            this.flushQuad(buffers, quad, facing, false, model.getQuads(fluidState.getBlockState(), Direction.UP, random));
 
             if (fluidState.method_15756(world, this.scratchPos.set(posX, posY + 1, posZ))) {
                 this.setVertex(quad, 3, 0.0f, h1, 0.0f, u1, v1);
