@@ -11,12 +11,13 @@ import me.jellysquid.mods.sodium.client.render.chunk.ChunkRenderBackend;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkMeshAttribute;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumMap;
 import java.util.Locale;
@@ -26,9 +27,6 @@ public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState>
         implements ChunkRenderBackend<T> {
     private final EnumMap<ChunkFogMode, EnumMap<BlockRenderPass, ChunkProgram>> programs = new EnumMap<>(ChunkFogMode.class);
     private final EnumMap<ChunkFogMode, EnumMap<BlockRenderPass, ChunkProgram>> shadowPrograms = new EnumMap<>(ChunkFogMode.class);
-
-    @Nullable
-    private final SodiumTerrainPipeline pipeline = SodiumTerrainPipeline.create().orElse(null);
 
     protected final ChunkVertexType vertexType;
     protected final GlVertexFormat<ChunkMeshAttribute> vertexFormat;
@@ -40,7 +38,7 @@ public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState>
         this.vertexFormat = vertexType.getCustomVertexFormat();
     }
 
-    private GlShader createVertexShader(RenderDevice device, ChunkFogMode fogMode, BlockRenderPass pass, boolean shadow) {
+    private GlShader createVertexShader(RenderDevice device, ChunkFogMode fogMode, BlockRenderPass pass, boolean shadow, SodiumTerrainPipeline pipeline) {
         if (pipeline != null) {
             Optional<String> irisVertexShader;
 
@@ -60,7 +58,7 @@ public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState>
                 new Identifier("sodium", "chunk_gl20.v.glsl"), fogMode.getDefines());
     }
 
-    private GlShader createFragmentShader(RenderDevice device, ChunkFogMode fogMode, BlockRenderPass pass, boolean shadow) {
+    private GlShader createFragmentShader(RenderDevice device, ChunkFogMode fogMode, BlockRenderPass pass, boolean shadow, SodiumTerrainPipeline pipeline) {
         if (pipeline != null) {
             Optional<String> irisFragmentShader;
 
@@ -81,9 +79,10 @@ public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState>
     }
 
     private ChunkProgram createShader(RenderDevice device, ChunkFogMode fogMode, BlockRenderPass pass,
-                                      GlVertexFormat<ChunkMeshAttribute> vertexFormat, boolean shadow) {
-        GlShader vertShader = createVertexShader(device, fogMode, pass, shadow);
-        GlShader fragShader = createFragmentShader(device, fogMode, pass, shadow);
+                                      GlVertexFormat<ChunkMeshAttribute> vertexFormat, boolean shadow,
+                                      SodiumTerrainPipeline pipeline) {
+        GlShader vertShader = createVertexShader(device, fogMode, pass, shadow, pipeline);
+        GlShader fragShader = createFragmentShader(device, fogMode, pass, shadow, pipeline);
 
         try {
             return GlProgram.builder(new Identifier("sodium", "chunk_shader_for_" + pass.toString().toLowerCase(Locale.ROOT) + (shadow ? "_gbuffer" : "_shadow")))
@@ -115,17 +114,27 @@ public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState>
 
     @Override
     public final void createShaders(RenderDevice device) {
+        WorldRenderingPipeline worldRenderingPipeline = Iris.getPipelineManager().getPipeline();
+        SodiumTerrainPipeline sodiumTerrainPipeline = null;
+
+        if (worldRenderingPipeline != null) {
+            sodiumTerrainPipeline = worldRenderingPipeline.getSodiumTerrainPipeline();
+        }
+
+        Iris.getPipelineManager().clearSodiumShaderReloadNeeded();
+
         for (ChunkFogMode fogMode : ChunkFogMode.values()) {
-            this.programs.put(fogMode, createShadersForFogMode(device, fogMode, false));
-            this.shadowPrograms.put(fogMode, createShadersForFogMode(device, fogMode, true));
+            this.programs.put(fogMode, createShadersForFogMode(device, fogMode, false, sodiumTerrainPipeline));
+            this.shadowPrograms.put(fogMode, createShadersForFogMode(device, fogMode, true, sodiumTerrainPipeline));
         }
     }
 
-    private EnumMap<BlockRenderPass, ChunkProgram> createShadersForFogMode(RenderDevice device, ChunkFogMode mode, boolean shadow) {
+    private EnumMap<BlockRenderPass, ChunkProgram> createShadersForFogMode(RenderDevice device, ChunkFogMode mode, boolean shadow,
+                                                                           SodiumTerrainPipeline pipeline) {
         EnumMap<BlockRenderPass, ChunkProgram> shaders = new EnumMap<>(BlockRenderPass.class);
 
         for (BlockRenderPass pass : BlockRenderPass.VALUES) {
-            shaders.put(pass, this.createShader(device, mode, pass, this.vertexFormat, shadow));
+            shaders.put(pass, this.createShader(device, mode, pass, this.vertexFormat, shadow, pipeline));
         }
 
         return shaders;
@@ -133,6 +142,12 @@ public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState>
 
     @Override
     public void begin(MatrixStack matrixStack, BlockRenderPass pass) {
+        if (Iris.getPipelineManager().isSodiumShaderReloadNeeded()) {
+            RenderDevice device = this.programs.get(ChunkFogMode.LINEAR).get(BlockRenderPass.SOLID).getDevice();
+            deleteShaders();
+            createShaders(device);
+        }
+
         if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
             this.activeProgram = this.shadowPrograms.get(LegacyFogHelper.getFogMode()).get(pass);
 
@@ -147,14 +162,7 @@ public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState>
         this.activeProgram.setup(matrixStack, this.vertexType.getModelScale(), this.vertexType.getTextureScale());
     }
 
-    @Override
-    public void end(MatrixStack matrixStack) {
-        this.activeProgram.unbind();
-        this.activeProgram = null;
-    }
-
-    @Override
-    public void delete() {
+    private void deleteShaders() {
         for (EnumMap<BlockRenderPass, ChunkProgram> shaders: this.programs.values()) {
             for (ChunkProgram shader : shaders.values()) {
                 shader.delete();
@@ -166,6 +174,17 @@ public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState>
                 shader.delete();
             }
         }
+    }
+
+    @Override
+    public void end(MatrixStack matrixStack) {
+        this.activeProgram.unbind();
+        this.activeProgram = null;
+    }
+
+    @Override
+    public void delete() {
+        deleteShaders();
     }
 
     @Override
