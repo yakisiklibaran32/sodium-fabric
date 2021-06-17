@@ -32,6 +32,7 @@
   },
   "breaks": {
     "optifabric": "*",
-    "canvas": "*"
+    "canvas": "*",
+    "sodium-extra": "<=0.3.1"
   }
 }
