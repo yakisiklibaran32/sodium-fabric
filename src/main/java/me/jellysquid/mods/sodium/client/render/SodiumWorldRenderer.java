@@ -273,7 +273,7 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
         double y = cameraPos.getY();
         double z = cameraPos.getZ();
 
-        BlockEntityRenderDispatcher blockEntityRenderer = MinecraftClient.getInstance().getBlockEntityRenderDispatcher();
+        BlockEntityRenderDispatcher blockEntityRenderer = BlockEntityRenderDispatcher.INSTANCE;
 
         for (BlockEntity blockEntity : this.renderChunkManager.getVisibleBlockEntities()) {
             BlockPos pos = blockEntity.getPos();

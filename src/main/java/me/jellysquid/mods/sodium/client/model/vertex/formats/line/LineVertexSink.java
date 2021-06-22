@@ -5,7 +5,7 @@ import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
 
 public interface LineVertexSink extends VertexSink {
-    VertexFormat VERTEX_FORMAT = VertexFormats.LINES;
+    VertexFormat VERTEX_FORMAT = VertexFormats.POSITION;
 
     /**
      * Writes a line vertex to the sink.

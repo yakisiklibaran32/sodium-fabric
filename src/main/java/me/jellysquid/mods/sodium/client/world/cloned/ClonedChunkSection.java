@@ -32,6 +32,7 @@ public class ClonedChunkSection {
 
     private final Long2ObjectOpenHashMap<BlockEntity> blockEntities;
     private final ChunkNibbleArray[] lightDataArrays;
+    private final World world;
 
     private ChunkSectionPos pos;
 
@@ -40,20 +41,21 @@ public class ClonedChunkSection {
 
     private BiomeArray biomeData;
 
-    ClonedChunkSection(ClonedChunkSectionCache backingCache) {
+    ClonedChunkSection(ClonedChunkSectionCache backingCache, World world) {
         this.backingCache = backingCache;
+        this.world = world;
         this.blockEntities = new Long2ObjectOpenHashMap<>(8);
         this.lightDataArrays = new ChunkNibbleArray[LIGHT_TYPES.length];
     }
 
-    public void init(World world, ChunkSectionPos pos) {
+    public void init(ChunkSectionPos pos) {
         WorldChunk chunk = world.getChunk(pos.getX(), pos.getZ());
 
         if (chunk == null) {
             throw new RuntimeException("Couldn't retrieve chunk at " + pos.toChunkPos());
         }
 
-        ChunkSection section = getChunkSection(world, chunk, pos);
+        ChunkSection section = getChunkSection(chunk, pos);
 
         if (ChunkSection.isEmpty(section)) {
             section = EMPTY_SECTION;
@@ -148,11 +150,11 @@ public class ClonedChunkSection {
         return new PackedIntegerArray(container.getPaletteSize(), array.getSize(), storage.clone());
     }
 
-    private static ChunkSection getChunkSection(World world, Chunk chunk, ChunkSectionPos pos) {
+    private static ChunkSection getChunkSection(Chunk chunk, ChunkSectionPos pos) {
         ChunkSection section = null;
 
-        if (!world.isOutOfHeightLimit(ChunkSectionPos.getBlockCoord(pos.getY()))) {
-            section = chunk.getSectionArray()[world.sectionCoordToIndex(pos.getY())];
+        if (!World.isOutOfBuildLimitVertically(ChunkSectionPos.getBlockCoord(pos.getY()))) {
+            section = chunk.getSectionArray()[pos.getY()];
         }
 
         return section;

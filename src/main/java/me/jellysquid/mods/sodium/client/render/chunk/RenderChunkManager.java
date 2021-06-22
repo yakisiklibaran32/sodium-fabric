@@ -154,7 +154,7 @@ public class RenderChunkManager implements ChunkStatusListener {
             int x = ChunkPos.getPackedX(entry.getLongKey());
             int z = ChunkPos.getPackedZ(entry.getLongKey());
 
-            for (int y = this.world.getBottomSectionCoord(); y < this.world.getTopSectionCoord(); y++) {
+            for (int y = 0; y < 16; y++) {
                 this.processStatusChangeForSection(x, y, z, entry.getValue());
             }
         }
@@ -315,7 +315,7 @@ public class RenderChunkManager implements ChunkStatusListener {
     private RenderChunk addChunk(int x, int y, int z) {
         RenderChunk render = this.regions.createChunk(this.worldRenderer, x, y, z);
 
-        if (ChunkSection.isEmpty(this.world.getChunk(x, z).getSectionArray()[this.world.sectionCoordToIndex(y)])) {
+        if (ChunkSection.isEmpty(this.world.getChunk(x, z).getSectionArray()[y])) {
             render.setData(ChunkRenderData.EMPTY);
         } else {
             render.scheduleRebuild(false);

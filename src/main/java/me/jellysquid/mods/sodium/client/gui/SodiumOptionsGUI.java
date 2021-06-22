@@ -1,6 +1,5 @@
 package me.jellysquid.mods.sodium.client.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import me.jellysquid.mods.sodium.client.SodiumClientMod;
 import me.jellysquid.mods.sodium.client.gui.options.*;
 import me.jellysquid.mods.sodium.client.gui.options.control.Control;
@@ -10,9 +9,9 @@ import me.jellysquid.mods.sodium.client.gui.widgets.FlatButtonWidget;
 import me.jellysquid.mods.sodium.client.util.Dim2i;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Drawable;
+import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.option.VideoOptionsScreen;
-import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.OrderedText;
@@ -33,6 +32,7 @@ public class SodiumOptionsGUI extends Screen {
     private final List<OptionPage> pages = new ArrayList<>();
 
     private final List<ControlElement<?>> controls = new ArrayList<>();
+    private final List<Drawable> drawable = new ArrayList<>();
 
     private final Screen prevScreen;
 
@@ -69,8 +69,8 @@ public class SodiumOptionsGUI extends Screen {
 
     private void rebuildGUI() {
         this.controls.clear();
-
-        this.clearChildren();
+        this.children.clear();
+        this.drawable.clear();
 
         if (this.currentPage == null) {
             if (this.pages.isEmpty()) {
@@ -94,11 +94,17 @@ public class SodiumOptionsGUI extends Screen {
             this.setDonationButtonVisibility(false);
         }
 
-        this.addDrawableChild(this.undoButton);
-        this.addDrawableChild(this.applyButton);
-        this.addDrawableChild(this.closeButton);
-        this.addDrawableChild(this.donateButton);
-        this.addDrawableChild(this.hideDonateButton);
+        this.children.add(this.undoButton);
+        this.children.add(this.applyButton);
+        this.children.add(this.closeButton);
+        this.children.add(this.donateButton);
+        this.children.add(this.hideDonateButton);
+
+        for (Element element : this.children) {
+            if (element instanceof Drawable) {
+                this.drawable.add((Drawable) element);
+            }
+        }
     }
 
     private void setDonationButtonVisibility(boolean value) {
@@ -131,7 +137,7 @@ public class SodiumOptionsGUI extends Screen {
 
             x += width + 6;
 
-            this.addDrawableChild(button);
+            this.children.add(button);
         }
     }
 
@@ -145,9 +151,8 @@ public class SodiumOptionsGUI extends Screen {
                 Control<?> control = option.getControl();
                 ControlElement<?> element = control.createElement(new Dim2i(x, y, 200, 18));
 
-                this.addDrawableChild(element);
-
                 this.controls.add(element);
+                this.children.add(element);
 
                 // Move down to the next option
                 y += 18;
@@ -164,7 +169,9 @@ public class SodiumOptionsGUI extends Screen {
 
         this.updateControls();
 
-        super.render(matrixStack, mouseX, mouseY, delta);
+        for (Drawable drawable : this.drawable) {
+            drawable.render(matrixStack, mouseX, mouseY, delta);
+        }
 
         if (this.hoveredElement != null) {
             this.renderOptionTooltip(matrixStack, this.hoveredElement);

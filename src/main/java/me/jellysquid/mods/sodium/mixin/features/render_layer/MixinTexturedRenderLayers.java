@@ -18,17 +18,4 @@ public class MixinTexturedRenderLayers {
     @Final
     public static Map<SignType, SpriteIdentifier> WOOD_TYPE_TEXTURES;
 
-    // Instantiating a SpriteIdentifier every time a sign tries to grab a texture identifier causes a significant
-    // performance impact as no RenderLayer will ever be cached for the sprite. Minecraft already maintains a
-    // SignType -> SpriteIdentifier cache but for some reason doesn't use it.
-    @Inject(method = "getSignTextureId", at = @At("HEAD"), cancellable = true)
-    private static void preGetSignTextureId(SignType type, CallbackInfoReturnable<SpriteIdentifier> ci) {
-        if (WOOD_TYPE_TEXTURES != null) {
-            SpriteIdentifier sprite = WOOD_TYPE_TEXTURES.get(type);
-
-            if (type != null) {
-                ci.setReturnValue(sprite);
-            }
-        }
-    }
 }
