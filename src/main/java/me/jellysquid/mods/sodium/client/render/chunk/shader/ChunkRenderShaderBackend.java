@@ -12,6 +12,7 @@ import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkMeshAttribute;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
@@ -99,12 +100,19 @@ public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState>
                     .bindAttribute("d_ModelOffset", ChunkShaderBindingPoints.MODEL_OFFSET)
                     .build((program, name) -> {
                         ProgramUniforms uniforms = null;
+                        ProgramSamplers samplers = null;
 
                         if (pipeline != null) {
                             uniforms = pipeline.initUniforms(name);
+
+                            if (shadow) {
+                                samplers = pipeline.initShadowSamplers(name);
+                            } else {
+                                samplers = pipeline.initTerrainSamplers(name);
+                            }
                         }
 
-                        return new ChunkProgram(device, program, name, fogMode.getFactory(), uniforms);
+                        return new ChunkProgram(device, program, name, fogMode.getFactory(), uniforms, samplers);
                     });
         } finally {
             vertShader.delete();
