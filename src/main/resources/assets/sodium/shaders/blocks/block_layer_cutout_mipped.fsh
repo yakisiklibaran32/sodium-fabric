@@ -5,7 +5,7 @@
 void main() {
     vec4 sampleBlockTex = texture(u_BlockTex, v_TexCoord);
 
-    if (sampleBlockTex.a < 0.5) {
+    if (sampleBlockTex.a < 0.1) {
         discard;
     }
 
