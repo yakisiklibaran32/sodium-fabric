@@ -15,7 +15,9 @@ import net.minecraft.client.render.VertexConsumer;
  * Like HFPModelVertexType, but extended to support Iris. The extensions aren't particularly efficient right now.
  */
 public class XHFPModelVertexType implements ChunkVertexType {
-    public static final GlVertexFormat<ChunkMeshAttribute> VERTEX_FORMAT = GlVertexFormat.builder(ChunkMeshAttribute.class, 44)
+    static final int STRIDE = 44;
+
+    public static final GlVertexFormat<ChunkMeshAttribute> VERTEX_FORMAT = GlVertexFormat.builder(ChunkMeshAttribute.class, STRIDE)
             .addElement(ChunkMeshAttribute.CHUNK_OFFSET, 0, GlVertexAttributeFormat.UNSIGNED_INT_2_10_10_10_REV, 4, false)
             .addElement(ChunkMeshAttribute.POSITION, 4, GlVertexAttributeFormat.UNSIGNED_SHORT, 4, false)
             .addElement(ChunkMeshAttribute.COLOR, 12, GlVertexAttributeFormat.UNSIGNED_BYTE, 4, true)
@@ -83,7 +85,7 @@ public class XHFPModelVertexType implements ChunkVertexType {
     }
 
     static float decodeBlockTexture(short raw) {
-        return raw * TEXTURE_SCALE;
+        return (raw & 0xFFFF) * TEXTURE_SCALE;
     }
 
     static short encodePosition(float v) {
@@ -91,7 +93,7 @@ public class XHFPModelVertexType implements ChunkVertexType {
     }
 
     static float decodePosition(short raw) {
-        return raw * MODEL_SCALE - MODEL_ORIGIN;
+        return (raw & 0xFFFF) * MODEL_SCALE - MODEL_ORIGIN;
     }
 
     static int encodeLightMapTexCoord(int light) {

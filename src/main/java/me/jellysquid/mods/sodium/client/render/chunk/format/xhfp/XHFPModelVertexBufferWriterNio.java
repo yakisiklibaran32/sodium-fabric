@@ -22,7 +22,7 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
         this.idHolder = idHolder;
     }
 
-    private static final int STRIDE = 44;
+    private static final int STRIDE = XHFPModelVertexType.STRIDE;
 
     int vertexCount = 0;
     float uSum;
@@ -44,7 +44,7 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 
     /*@Override
     public void writeQuad(float x, float y, float z, int color, float u, float v, int light) {
-        uSum += u;
+        uSum += u;iris_
         vSum += v;
 
         short materialId = idHolder.id;
