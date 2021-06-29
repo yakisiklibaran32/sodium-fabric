@@ -28,11 +28,13 @@
   ],
   "depends": {
     "fabricloader": ">=0.8.0",
+    "iris": ">=1.1.0-pre",
     "fabric-rendering-data-attachment-v1": ">=0.1",
     "fabric-rendering-fluids-v1": ">=0.1"
   },
   "breaks": {
     "optifabric": "*",
-    "canvas": "*"
+    "canvas": "*",
+    "sodium-extra": "<=0.3.1"
   }
 }

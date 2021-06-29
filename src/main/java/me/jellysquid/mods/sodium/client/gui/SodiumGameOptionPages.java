@@ -9,6 +9,7 @@ import me.jellysquid.mods.sodium.client.gui.options.control.SliderControl;
 import me.jellysquid.mods.sodium.client.gui.options.control.TickBoxControl;
 import me.jellysquid.mods.sodium.client.gui.options.storage.MinecraftOptionsStorage;
 import me.jellysquid.mods.sodium.client.gui.options.storage.SodiumOptionsStorage;
+import me.jellysquid.mods.sodium.client.render.chunk.backends.multidraw.MultidrawChunkRenderBackend;
 import me.jellysquid.mods.sodium.client.util.UnsafeUtil;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
@@ -130,18 +131,38 @@ public class SodiumGameOptionPages {
         return new OptionPage("General", ImmutableList.copyOf(groups));
     }
 
+    enum SupportedGraphicsMode {
+        FAST, FANCY;
+
+        static SupportedGraphicsMode fromVanilla(GraphicsMode vanilla) {
+            if (vanilla == GraphicsMode.FAST) {
+                return FAST;
+            } else {
+                return FANCY;
+            }
+        }
+
+        GraphicsMode toVanilla() {
+            if (this == FAST) {
+                return GraphicsMode.FAST;
+            } else {
+                return GraphicsMode.FANCY;
+            }
+        }
+    }
+
     public static OptionPage quality() {
         List<OptionGroup> groups = new ArrayList<>();
 
         groups.add(OptionGroup.createBuilder()
-                .add(OptionImpl.createBuilder(GraphicsMode.class, vanillaOpts)
+                .add(OptionImpl.createBuilder(SupportedGraphicsMode.class, vanillaOpts)
                         .setName("Graphics Quality")
                         .setTooltip("The default graphics quality controls some legacy options and is necessary for mod compatibility. If the options below are left to " +
                                 "\"Default\", they will use this setting.")
-                        .setControl(option -> new CyclingControl<>(option, GraphicsMode.class, new String[] { "Fast", "Fancy", "Fabulous" }))
+                        .setControl(option -> new CyclingControl<>(option, SupportedGraphicsMode.class, new String[] { "Fast", "Fancy"/*, "Fabulous"*/ }))
                         .setBinding(
-                                (opts, value) -> opts.graphicsMode = value,
-                                opts -> opts.graphicsMode)
+                                (opts, value) -> opts.graphicsMode = value.toVanilla(),
+                                opts -> SupportedGraphicsMode.fromVanilla(opts.graphicsMode))
                         .setImpact(OptionImpact.HIGH)
                         .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
                         .build())

@@ -11,8 +11,13 @@ import me.jellysquid.mods.sodium.client.render.chunk.compile.buffers.ChunkModelB
 import me.jellysquid.mods.sodium.client.render.chunk.data.ChunkMeshData;
 import me.jellysquid.mods.sodium.client.render.chunk.data.ChunkRenderData;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexSink;
+import me.jellysquid.mods.sodium.client.render.chunk.format.MaterialIdHolder;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPassManager;
+import net.coderbot.iris.block_rendering.BlockRenderingSettings;
+import net.coderbot.iris.shaderpack.IdMap;
+
+import net.minecraft.block.BlockState;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.util.GlAllocationUtils;
 
@@ -35,6 +40,7 @@ public class ChunkBuildBuffers {
     private final ChunkVertexType vertexType;
 
     private final BlockRenderPassManager renderPassManager;
+    private final MaterialIdHolder idHolder;
 
     public ChunkBuildBuffers(ChunkVertexType vertexType, BlockRenderPassManager renderPassManager) {
         this.vertexType = vertexType;
@@ -44,6 +50,14 @@ public class ChunkBuildBuffers {
 
         this.vertexBuffers = new VertexBufferBuilder[BlockRenderPass.COUNT];
         this.indexBuffers = new IndexBufferBuilder[BlockRenderPass.COUNT][ModelQuadFacing.COUNT];
+
+        IdMap map = BlockRenderingSettings.INSTANCE.getIdMap();
+
+        if (map != null) {
+            this.idHolder = new MaterialIdHolder(map.getBlockProperties());
+        } else {
+            this.idHolder = new MaterialIdHolder();
+        }
 
         for (BlockRenderPass pass : BlockRenderPass.VALUES) {
             IndexBufferBuilder[] indexBuffers = this.indexBuffers[pass.ordinal()];
@@ -59,7 +73,7 @@ public class ChunkBuildBuffers {
 
     public void init(ChunkRenderData.Builder renderData) {
         for (int i = 0; i < this.delegates.length; i++) {
-            ModelVertexSink vertexSink = this.vertexType.createBufferWriter(this.vertexBuffers[i]);
+            ModelVertexSink vertexSink = this.vertexType.createBufferWriter(this.vertexBuffers[i], idHolder);
             IndexBufferBuilder[] indexBuffers = this.indexBuffers[i];
 
             this.delegates[i] = new BakedChunkModelBuilder(indexBuffers, vertexSink, renderData);
@@ -126,5 +140,13 @@ public class ChunkBuildBuffers {
                 vertexBuffer, indexBuffer);
 
         return new ChunkMeshData(vertexData, ranges);
+    }
+
+    public void setMaterialId(BlockState state, short renderType) {
+        this.idHolder.set(state, renderType);
+    }
+
+    public void resetMaterialId() {
+        this.idHolder.reset();
     }
 }
