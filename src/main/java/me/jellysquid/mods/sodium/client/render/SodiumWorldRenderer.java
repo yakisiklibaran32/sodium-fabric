@@ -159,14 +159,14 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
 
     public void restoreStateIfShadowsWereBeingRendered() {
         if (wasRenderingShadows && !ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-            this.chunkRenderManager.swapState();
+            this.renderSectionManager.swapState();
             wasRenderingShadows = false;
         }
     }
 
     private void ensureStateSwapped() {
         if (!wasRenderingShadows && ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
-            this.chunkRenderManager.swapState();
+            this.renderSectionManager.swapState();
             wasRenderingShadows = true;
         }
     }

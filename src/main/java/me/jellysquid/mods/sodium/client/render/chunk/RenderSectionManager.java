@@ -29,6 +29,8 @@ import me.jellysquid.mods.sodium.client.world.cloned.ClonedChunkSectionCache;
 import me.jellysquid.mods.sodium.common.util.DirectionUtil;
 import me.jellysquid.mods.sodium.common.util.collections.FutureQueueDrainingIterator;
 import me.jellysquid.mods.sodium.common.util.collections.QueueDrainingIterator;
+import net.coderbot.iris.Iris;
+import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
@@ -78,11 +80,11 @@ public class RenderSectionManager implements ChunkStatusListener {
 
     private final Deque<ChunkBuildResult> uploadQueue = new ConcurrentLinkedDeque<>();
 
-    private final ChunkRenderList chunkRenderList = new ChunkRenderList();
+    private ChunkRenderList chunkRenderList = new ChunkRenderList();
     private final ChunkGraphIterationQueue iterationQueue = new ChunkGraphIterationQueue();
 
-    private final ObjectList<RenderSection> tickableChunks = new ObjectArrayList<>();
-    private final ObjectList<BlockEntity> visibleBlockEntities = new ObjectArrayList<>();
+    private ObjectList<RenderSection> tickableChunks = new ObjectArrayList<>();
+    private ObjectList<BlockEntity> visibleBlockEntities = new ObjectArrayList<>();
 
     private final SodiumWorldRenderer worldRenderer;
     private final ClientWorld world;
@@ -103,6 +105,11 @@ public class RenderSectionManager implements ChunkStatusListener {
 
     private int activeFrame = 0;
 
+    private ChunkRenderList chunkRenderListSwap = new ChunkRenderList();
+    private ObjectList<RenderSection> tickableChunksSwap = new ObjectArrayList<>();
+    private ObjectList<BlockEntity> visibleBlockEntitiesSwap = new ObjectArrayList<>();
+    private boolean isGraphDirtySwap;
+
     public RenderSectionManager(SodiumWorldRenderer worldRenderer, ChunkRenderer chunkRenderer, BlockRenderPassManager renderPassManager, ClientWorld world, int renderDistance) {
         this.chunkRenderer = chunkRenderer;
         this.worldRenderer = worldRenderer;
@@ -112,6 +119,7 @@ public class RenderSectionManager implements ChunkStatusListener {
         this.builder.init(world, renderPassManager);
 
         this.isGraphDirty = true;
+        this.isGraphDirtySwap = true;
         this.renderDistance = renderDistance;
 
         this.regions = new RenderRegionManager(this.chunkRenderer);
@@ -124,6 +132,24 @@ public class RenderSectionManager implements ChunkStatusListener {
 
             this.onChunkAdded(ChunkPos.getPackedX(pos), ChunkPos.getPackedZ(pos));
         }
+    }
+
+    public void swapState() {
+        ChunkRenderList chunkRenderListTmp = chunkRenderList;
+        chunkRenderList = chunkRenderListSwap;
+        chunkRenderListSwap = chunkRenderListTmp;
+
+        ObjectList<RenderSection> tickableChunksTmp = tickableChunks;
+        tickableChunks = tickableChunksSwap;
+        tickableChunksSwap = tickableChunksTmp;
+
+        ObjectList<BlockEntity> visibleBlockEntitiesTmp = visibleBlockEntities;
+        visibleBlockEntities = visibleBlockEntitiesSwap;
+        visibleBlockEntitiesSwap = visibleBlockEntitiesTmp;
+
+        boolean isGraphDirtyTmp = isGraphDirty;
+        isGraphDirty = isGraphDirtySwap;
+        isGraphDirtySwap = isGraphDirtyTmp;
     }
 
     private void updateRegionVisibilities(FrustumExtended frustum) {
@@ -153,7 +179,9 @@ public class RenderSectionManager implements ChunkStatusListener {
             int z = ChunkPos.getPackedZ(entry.getLongKey());
 
             for (int y = this.world.getBottomSectionCoord(); y < this.world.getTopSectionCoord(); y++) {
-                this.isGraphDirty |= this.processStatusChangeForSection(x, y, z, entry.getValue());
+                boolean dirtied = this.processStatusChangeForSection(x, y, z, entry.getValue());
+                this.isGraphDirty |= dirtied;
+                this.isGraphDirtySwap |= dirtied;
             }
 
             if (entry.getValue() == RenderChunkStatus.LOAD) {
@@ -165,6 +193,7 @@ public class RenderSectionManager implements ChunkStatusListener {
 
         this.statusProcessingQueue.clear();
         this.isGraphDirty = true;
+        this.isGraphDirtySwap = true;
     }
 
     private boolean processStatusChangeForSection(int x, int y, int z, RenderChunkStatus status) {
@@ -186,7 +215,8 @@ public class RenderSectionManager implements ChunkStatusListener {
 
         this.useFogCulling = false;
 
-        if (SodiumClientMod.options().advanced.useFogOcclusion) {
+        // Iris: disable fog culling when shaders are enabled since shaderpacks aren't guaranteed to actually implement fog.
+        if (SodiumClientMod.options().advanced.useFogOcclusion && !Iris.getCurrentPack().isPresent()) {
             float dist = RenderSystem.getShaderFogEnd() + FOG_PLANE_OFFSET;
 
             if (dist != 0.0f) {
@@ -240,8 +270,10 @@ public class RenderSectionManager implements ChunkStatusListener {
     }
 
     private void resetLists() {
-        this.rebuildQueue.clear();
-        this.importantRebuildQueue.clear();
+        if (!ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+            this.rebuildQueue.clear();
+            this.importantRebuildQueue.clear();
+        }
 
         this.visibleBlockEntities.clear();
         this.chunkRenderList.clear();
@@ -584,11 +616,13 @@ public class RenderSectionManager implements ChunkStatusListener {
     private void addVisible(RenderSection render, Direction flow) {
         this.iterationQueue.add(render, flow);
 
-        if (render.needsRebuild() && this.canBuildChunk(render)) {
-            if (render.needsImportantRebuild()) {
-                this.importantRebuildQueue.enqueue(render);
-            } else {
-                this.rebuildQueue.enqueue(render);
+        if (!ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+            if (render.needsRebuild() && this.canBuildChunk(render)) {
+                if (render.needsImportantRebuild()) {
+                    this.importantRebuildQueue.enqueue(render);
+                } else {
+                    this.rebuildQueue.enqueue(render);
+                }
             }
         }
 

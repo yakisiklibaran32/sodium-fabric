@@ -17,6 +17,7 @@ import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkMeshAttribute;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 import me.jellysquid.mods.sodium.client.render.chunk.region.RenderRegion;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderBindingPoints;
+import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.minecraft.client.util.math.MatrixStack;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.system.MemoryStack;
@@ -77,27 +78,31 @@ public class RegionChunkRenderer extends ShaderChunkRenderer {
 
                 this.addDrawCall(state.getModelPart(ModelQuadFacing.UNASSIGNED), vertexOffset, indexOffset);
 
-                if (camera.posY > bounds.y1) {
+                // Iris: No block face culling during the shadow pass
+
+                boolean dontCullFaces = ShadowRenderingState.areShadowsCurrentlyBeingRendered();
+
+                if (camera.posY > bounds.y1 || dontCullFaces) {
                     this.addDrawCall(state.getModelPart(ModelQuadFacing.UP), vertexOffset, indexOffset);
                 }
 
-                if (camera.posY < bounds.y2) {
+                if (camera.posY < bounds.y2 || dontCullFaces) {
                     this.addDrawCall(state.getModelPart(ModelQuadFacing.DOWN), vertexOffset, indexOffset);
                 }
 
-                if (camera.posX > bounds.x1) {
+                if (camera.posX > bounds.x1 || dontCullFaces) {
                     this.addDrawCall(state.getModelPart(ModelQuadFacing.EAST), vertexOffset, indexOffset);
                 }
 
-                if (camera.posX < bounds.x2) {
+                if (camera.posX < bounds.x2 || dontCullFaces) {
                     this.addDrawCall(state.getModelPart(ModelQuadFacing.WEST), vertexOffset, indexOffset);
                 }
 
-                if (camera.posZ > bounds.z1) {
+                if (camera.posZ > bounds.z1 || dontCullFaces) {
                     this.addDrawCall(state.getModelPart(ModelQuadFacing.SOUTH), vertexOffset, indexOffset);
                 }
 
-                if (camera.posZ < bounds.z2) {
+                if (camera.posZ < bounds.z2 || dontCullFaces) {
                     this.addDrawCall(state.getModelPart(ModelQuadFacing.NORTH), vertexOffset, indexOffset);
                 }
             }
