@@ -275,7 +275,7 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
         this.renderDistance = this.client.options.viewDistance;
 
         this.renderPassManager = BlockRenderPassManager.createDefaultMappings();
-        this.chunkRenderer = new RegionChunkRenderer(device, ChunkModelVertexFormats.DEFAULT);
+        this.chunkRenderer = new RegionChunkRenderer(device, ChunkModelVertexFormats.EXTENDED);
 
         this.renderSectionManager = new RenderSectionManager(this, this.chunkRenderer, this.renderPassManager, this.world, this.renderDistance);
     }
