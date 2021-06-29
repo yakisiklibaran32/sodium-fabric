@@ -7,17 +7,13 @@ import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Matrix4f;
 import org.lwjgl.opengl.GL20C;
-import org.lwjgl.opengl.GL32C;
-import net.minecraft.util.math.Matrix4f;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.texunits.TextureUnit;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.BufferUtils;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.FloatBuffer;
-import java.util.function.Function;
 
 /**
  * A forward-rendering shader program for chunks.
@@ -30,8 +26,9 @@ public class ChunkProgram extends GlProgram {
     private final int uTextureScale;
     private final int uBlockTex;
     private final int uLightTex;
-    private final int modelViewMatrixOffset;
-    private final int normalMatrixOffset;
+    private final int uModelViewMatrix;
+    private final int uProjectionMatrix;
+    private final int uNormalMatrix;
 
     @Nullable
     private final ProgramUniforms irisProgramUniforms;
@@ -59,8 +56,9 @@ public class ChunkProgram extends GlProgram {
 
         this.fogShader = options.fogMode.getFactory().apply(this);
 
-        this.modelViewMatrixOffset = this.getUniformLocation("u_ModelViewMatrix");
-        this.normalMatrixOffset = this.getUniformLocation("u_NormalMatrix");
+        this.uModelViewMatrix = this.getUniformLocation("u_ModelViewMatrix");
+        this.uProjectionMatrix = this.getUniformLocation("u_ProjectionMatrix");
+        this.uNormalMatrix = this.getUniformLocation("u_NormalMatrix");
         this.irisProgramUniforms = irisProgramUniforms;
         this.irisProgramSamplers = irisProgramSamplers;
     }
@@ -81,17 +79,6 @@ public class ChunkProgram extends GlProgram {
 
         this.fogShader.setup();
 
-        try (MemoryStack memoryStack = MemoryStack.stackPush()) {
-            FloatBuffer bufModelViewProjection = memoryStack.mallocFloat(16);
-
-            Matrix4f matrix = RenderSystem.getProjectionMatrix().copy();
-
-            matrix.multiply(matrixStack.peek().getModel());
-            matrix.writeColumnMajor(bufModelViewProjection);
-
-            GL20C.glUniformMatrix4fv(this.uModelViewProjectionMatrix, false, bufModelViewProjection);
-        }
-
         if (irisProgramUniforms != null) {
             irisProgramUniforms.update();
         }
@@ -105,8 +92,15 @@ public class ChunkProgram extends GlProgram {
         normalMatrix.invert();
         normalMatrix.transpose();
 
-        uniformMatrix(modelViewMatrixOffset, modelViewMatrix);
-        uniformMatrix(normalMatrixOffset, normalMatrix);
+        uniformMatrix(this.uModelViewMatrix, modelViewMatrix);
+        uniformMatrix(this.uProjectionMatrix, RenderSystem.getProjectionMatrix());
+        uniformMatrix(this.uNormalMatrix, normalMatrix);
+
+        Matrix4f matrix = RenderSystem.getProjectionMatrix().copy();
+
+        matrix.multiply(matrixStack.peek().getModel());
+
+        uniformMatrix(this.uModelViewProjectionMatrix, matrix);
     }
 
     @Override
@@ -119,12 +113,17 @@ public class ChunkProgram extends GlProgram {
         }
     }
 
-    private void uniformMatrix(int location, Matrix4f matrix) {
-        // TODO: Don't use BufferUtils here...
-        FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
-        matrix.writeToBuffer(buffer);
-        buffer.rewind();
+    private static void uniformMatrix(int location, Matrix4f matrix) {
+        if (location == -1) {
+            return;
+        }
 
-        GL20C.glUniformMatrix4fv(location, false, buffer);
+        try (MemoryStack memoryStack = MemoryStack.stackPush()) {
+            FloatBuffer buffer = memoryStack.mallocFloat(16);
+
+            matrix.writeColumnMajor(buffer);
+
+            GL20C.glUniformMatrix4fv(location, false, buffer);
+        }
     }
 }
