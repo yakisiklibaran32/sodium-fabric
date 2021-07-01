@@ -18,7 +18,7 @@ public class XHFPModelVertexType implements ChunkVertexType {
     static final int STRIDE = 44;
 
     public static final GlVertexFormat<ChunkMeshAttribute> VERTEX_FORMAT = GlVertexFormat.builder(ChunkMeshAttribute.class, STRIDE)
-            .addElement(ChunkMeshAttribute.CHUNK_OFFSET, 0, GlVertexAttributeFormat.UNSIGNED_INT_2_10_10_10_REV, 4, false)
+            .addElement(ChunkMeshAttribute.OFFSET, 0, GlVertexAttributeFormat.UNSIGNED_BYTE, 3, false)
             .addElement(ChunkMeshAttribute.POSITION, 4, GlVertexAttributeFormat.UNSIGNED_SHORT, 4, false)
             .addElement(ChunkMeshAttribute.COLOR, 12, GlVertexAttributeFormat.UNSIGNED_BYTE, 4, true)
             .addElement(ChunkMeshAttribute.BLOCK_TEXTURE, 16, GlVertexAttributeFormat.UNSIGNED_SHORT, 2, false)

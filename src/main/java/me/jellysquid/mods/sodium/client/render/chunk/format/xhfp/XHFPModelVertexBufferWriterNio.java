@@ -7,7 +7,6 @@ import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferWriterNi
 import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkModelVertexFormats;
 import me.jellysquid.mods.sodium.client.render.chunk.format.MaterialIdHolder;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexSink;
-import me.jellysquid.mods.sodium.client.util.Int10;
 import me.jellysquid.mods.sodium.client.util.Norm3b;
 
 import net.minecraft.util.math.Vec3f;
@@ -72,7 +71,9 @@ public class XHFPModelVertexBufferWriterNio extends VertexBufferWriterNio implem
 
         ByteBuffer buffer = this.byteBuffer;
 
-        buffer.putInt(i, Int10.pack(offsetX, offsetY, offsetZ));
+        buffer.put(i, (byte) offsetX);
+        buffer.put(i + 1, (byte) offsetY);
+        buffer.put(i + 2, (byte) offsetZ);
 
         buffer.putShort(i + 4, XHFPModelVertexType.encodePosition(posX));
         buffer.putShort(i + 6, XHFPModelVertexType.encodePosition(posY));
