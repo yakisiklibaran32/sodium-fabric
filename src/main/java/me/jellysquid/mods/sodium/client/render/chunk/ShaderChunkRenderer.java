@@ -66,17 +66,12 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
 
     // TODO: Define these in the render pass itself
     protected String getShaderName(BlockRenderPass pass) {
-        switch (pass) {
-            case CUTOUT:
-                return "blocks/block_layer_cutout";
-            case CUTOUT_MIPPED:
-                return "blocks/block_layer_cutout_mipped";
-            case TRANSLUCENT:
-            case TRIPWIRE:
-                return "blocks/block_layer_translucent";
-            default:
-                return "blocks/block_layer_solid";
-        }
+        return switch (pass) {
+            case CUTOUT -> "blocks/block_layer_cutout";
+            case CUTOUT_MIPPED -> "blocks/block_layer_cutout_mipped";
+            case TRANSLUCENT, TRIPWIRE -> "blocks/block_layer_translucent";
+            default -> "blocks/block_layer_solid";
+        };
     }
 
     private GlShader createVertexShader(RenderDevice device, boolean isShadowPass, BlockRenderPass pass,
@@ -201,7 +196,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
 
         boolean isShadowPass = ShadowRenderingState.areShadowsCurrentlyBeingRendered();
 
-        ChunkShaderOptions options = new ChunkShaderOptions();
+        ChunkShaderOptions options = new ChunkShaderOptions(ChunkFogMode.SMOOTH);
         options.fogMode = ChunkFogMode.SMOOTH;
 
         this.activeProgram = this.compileProgram(isShadowPass, pass, options, sodiumTerrainPipeline);

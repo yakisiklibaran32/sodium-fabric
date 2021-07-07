@@ -18,8 +18,10 @@ import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.shaderpack.IdMap;
 
 import net.minecraft.block.BlockState;
+import me.jellysquid.mods.sodium.client.util.NativeBuffer;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.util.GlAllocationUtils;
+import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -72,6 +74,16 @@ public class ChunkBuildBuffers {
     }
 
     public void init(ChunkRenderData.Builder renderData) {
+        for (VertexBufferBuilder vertexBuffer : this.vertexBuffers) {
+            vertexBuffer.reset();
+        }
+
+        for (IndexBufferBuilder[] indexBuffers : this.indexBuffers) {
+            for (IndexBufferBuilder indexBuffer : indexBuffers) {
+                indexBuffer.reset();
+            }
+        }
+
         for (int i = 0; i < this.delegates.length; i++) {
             ModelVertexSink vertexSink = this.vertexType.createBufferWriter(this.vertexBuffers[i], idHolder);
             IndexBufferBuilder[] indexBuffers = this.indexBuffers[i];
@@ -89,8 +101,9 @@ public class ChunkBuildBuffers {
     }
 
     /**
-     * Creates immutable baked chunk meshes from all non-empty scratch buffers and resets the state of all mesh
-     * builders. This is used after all blocks have been rendered to pass the finished meshes over to the graphics card.
+     * Creates immutable baked chunk meshes from all non-empty scratch buffers. This is used after all blocks
+     * have been rendered to pass the finished meshes over to the graphics card. This function can be called multiple
+     * times to return multiple copies.
      */
     public ChunkMeshData createMesh(BlockRenderPass pass) {
         VertexBufferBuilder vertexBufferBuilder = this.vertexBuffers[pass.ordinal()];
@@ -106,8 +119,8 @@ public class ChunkBuildBuffers {
                 .mapToInt(IndexBufferBuilder::getSize)
                 .sum();
 
-        ByteBuffer vertexBuffer = GlAllocationUtils.allocateByteBuffer(vertexDataLength);
-        ByteBuffer indexBuffer = GlAllocationUtils.allocateByteBuffer(indexDataLength);
+        ByteBuffer vertexBuffer = MemoryUtil.memAlloc(vertexDataLength);
+        ByteBuffer indexBuffer = MemoryUtil.memAlloc(indexDataLength);
 
         int baseIndex = 0;
 
@@ -125,21 +138,25 @@ public class ChunkBuildBuffers {
             ranges.put(facing, new ElementRange(baseIndex, indexCount));
 
             indexBufferBuilder.get(indexBuffer);
-            indexBufferBuilder.reset();
 
             baseIndex += indexCount;
         }
 
         vertexBufferBuilder.get(vertexBuffer);
-        vertexBufferBuilder.reset();
 
         vertexBuffer.flip();
         indexBuffer.flip();
 
         IndexedVertexData vertexData = new IndexedVertexData(this.vertexType.getCustomVertexFormat(),
-                vertexBuffer, indexBuffer);
+                new NativeBuffer(vertexBuffer), new NativeBuffer(indexBuffer));
 
         return new ChunkMeshData(vertexData, ranges);
+    }
+
+    public void destroy() {
+        for (VertexBufferBuilder builder : this.vertexBuffers) {
+            builder.destroy();
+        }
     }
 
     public void setMaterialId(BlockState state, short renderType) {
