@@ -91,12 +91,12 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
             String fullName = "patched_" + name + "_for_sodium.vsh";
 
             if (irisVertexShader.isPresent()) {
-                return new GlShader(device, ShaderType.VERTEX, new Identifier("iris", fullName),
+                return new GlShader(ShaderType.VERTEX, new Identifier("iris", fullName),
                         irisVertexShader.get());
             }
         }
 
-        return ShaderLoader.loadShader(device, ShaderType.VERTEX,
+        return ShaderLoader.loadShader(ShaderType.VERTEX,
                 new Identifier("sodium", getShaderName(pass) + ".vsh"), constants);
     }
 
@@ -128,12 +128,12 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
             String fullName = "patched_" + name + "_for_sodium.fsh";
 
             if (irisFragmentShader.isPresent()) {
-                return new GlShader(device, ShaderType.FRAGMENT, new Identifier("iris", fullName),
+                return new GlShader(ShaderType.FRAGMENT, new Identifier("iris", fullName),
                         irisFragmentShader.get());
             }
         }
 
-        return ShaderLoader.loadShader(device, ShaderType.FRAGMENT,
+        return ShaderLoader.loadShader(ShaderType.FRAGMENT,
                 new Identifier("sodium", getShaderName(pass) + ".fsh"), constants);
     }
 
@@ -197,7 +197,6 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         boolean isShadowPass = ShadowRenderingState.areShadowsCurrentlyBeingRendered();
 
         ChunkShaderOptions options = new ChunkShaderOptions(ChunkFogMode.SMOOTH);
-        options.fogMode = ChunkFogMode.SMOOTH;
 
         this.activeProgram = this.compileProgram(isShadowPass, pass, options, sodiumTerrainPipeline);
         this.activeProgram.bind();

@@ -81,7 +81,7 @@ public class RenderSectionManager implements ChunkStatusListener {
 
     private final ChunkAdjacencyMap adjacencyMap = new ChunkAdjacencyMap();
 
-    private final ChunkRenderList chunkRenderList = new ChunkRenderList();
+    private ChunkRenderList chunkRenderList = new ChunkRenderList();
     private final ChunkGraphIterationQueue iterationQueue = new ChunkGraphIterationQueue();
 
     private ObjectList<RenderSection> tickableChunks = new ObjectArrayList<>();
@@ -156,9 +156,9 @@ public class RenderSectionManager implements ChunkStatusListener {
         visibleBlockEntities = visibleBlockEntitiesSwap;
         visibleBlockEntitiesSwap = visibleBlockEntitiesTmp;
 
-        boolean isGraphDirtyTmp = isGraphDirty;
-        isGraphDirty = isGraphDirtySwap;
-        isGraphDirtySwap = isGraphDirtyTmp;
+        boolean isGraphDirtyTmp = needsUpdate;
+        needsUpdate = needsUpdateSwap;
+        needsUpdateSwap = isGraphDirtyTmp;
     }
 
     public void update(Camera camera, FrustumExtended frustum, int frame, boolean spectator) {
