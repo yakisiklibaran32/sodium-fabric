@@ -156,9 +156,9 @@ public class RenderSectionManager implements ChunkStatusListener {
         visibleBlockEntities = visibleBlockEntitiesSwap;
         visibleBlockEntitiesSwap = visibleBlockEntitiesTmp;
 
-        boolean isGraphDirtyTmp = needsUpdate;
+        boolean needsUpdateTmp = needsUpdate;
         needsUpdate = needsUpdateSwap;
-        needsUpdateSwap = isGraphDirtyTmp;
+        needsUpdateSwap = needsUpdateTmp;
     }
 
     public void update(Camera camera, FrustumExtended frustum, int frame, boolean spectator) {
@@ -170,7 +170,6 @@ public class RenderSectionManager implements ChunkStatusListener {
         this.iterateChunks(camera, frustum, frame, spectator);
 
         this.needsUpdate = false;
-        this.needsUpdateSwap = false;
     }
 
     private void setup(Camera camera) {
@@ -269,7 +268,9 @@ public class RenderSectionManager implements ChunkStatusListener {
         this.adjacencyMap.onChunkLoaded(x, z);
 
         for (int y = this.world.getBottomSectionCoord(); y < this.world.getTopSectionCoord(); y++) {
-            this.needsUpdate |= this.loadSection(x, y, z);
+            boolean dirty = this.loadSection(x, y, z);
+            this.needsUpdate |= dirty;
+            this.needsUpdateSwap |= dirty;
         }
     }
 
@@ -278,7 +279,9 @@ public class RenderSectionManager implements ChunkStatusListener {
         this.adjacencyMap.onChunkUnloaded(x, z);
 
         for (int y = this.world.getBottomSectionCoord(); y < this.world.getTopSectionCoord(); y++) {
-            this.needsUpdate |= this.unloadSection(x, y, z);
+            boolean dirty = this.unloadSection(x, y, z);
+            this.needsUpdate |= dirty;
+            this.needsUpdateSwap |= dirty;
         }
     }
 
