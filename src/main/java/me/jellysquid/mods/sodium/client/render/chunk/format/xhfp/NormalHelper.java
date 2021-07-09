@@ -74,41 +74,22 @@ public abstract class NormalHelper {
 			return;
 		}*/
 
-        final float x0, y0, z0;
-        final float x1, y1, z1;
-        final float x2, y2, z2;
-        final float x3, y3, z3;
-
-        if(unsafe) {
-            x0 = q.x(0L);
-            y0 = q.y(0L);
-            z0 = q.z(0L);
-            x1 = q.x(1L);
-            y1 = q.y(1L);
-            z1 = q.z(1L);
-            x2 = q.x(2L);
-            y2 = q.y(2L);
-            z2 = q.z(2L);
-            x3 = q.x(3L);
-            y3 = q.y(3L);
-            z3 = q.z(3L);
-        } else {
-            x0 = q.x(0);
-            y0 = q.y(0);
-            z0 = q.z(0);
-            x1 = q.x(1);
-            y1 = q.y(1);
-            z1 = q.z(1);
-            x2 = q.x(2);
-            y2 = q.y(2);
-            z2 = q.z(2);
-            x3 = q.x(3);
-            y3 = q.y(3);
-            z3 = q.z(3);
-        }
+        final float x0 = q.x(0, unsafe);
+        final float y0 = q.y(0, unsafe);
+        final float z0 = q.z(0, unsafe);
+        final float x1 = q.x(1, unsafe);
+        final float y1 = q.y(1, unsafe);
+        final float z1 = q.z(1, unsafe);
+        final float x2 = q.x(2, unsafe);
+        final float y2 = q.y(2, unsafe);
+        final float z2 = q.z(2, unsafe);
+        final float x3 = q.x(3, unsafe);
+        final float y3 = q.y(3, unsafe);
+        final float z3 = q.z(3, unsafe);
 
 
-		final float dx0 = x2 - x0;
+
+        final float dx0 = x2 - x0;
 		final float dy0 = y2 - y0;
 		final float dz0 = z2 - z0;
 		final float dx1 = x3 - x1;
