@@ -4,7 +4,6 @@ import me.jellysquid.mods.sodium.client.SodiumClientMod;
 import me.jellysquid.mods.sodium.client.model.vertex.VertexSink;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferView;
 import me.jellysquid.mods.sodium.client.render.chunk.format.MaterialIdHolder;
-import me.jellysquid.mods.sodium.client.util.UnsafeUtil;
 
 public interface BlittableVertexType<T extends VertexSink> extends BufferVertexType<T> {
     /**
