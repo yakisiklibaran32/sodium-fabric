@@ -87,8 +87,6 @@ public abstract class NormalHelper {
         final float y3 = q.y(3, unsafe);
         final float z3 = q.z(3, unsafe);
 
-
-
         final float dx0 = x2 - x0;
 		final float dy0 = y2 - y0;
 		final float dz0 = z2 - z0;
