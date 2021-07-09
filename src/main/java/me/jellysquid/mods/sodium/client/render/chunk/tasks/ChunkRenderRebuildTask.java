@@ -1,7 +1,6 @@
 package me.jellysquid.mods.sodium.client.render.chunk.tasks;
 
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSection;
-import me.jellysquid.mods.sodium.client.render.chunk.region.RenderRegion;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildBuffers;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildResult;
 import me.jellysquid.mods.sodium.client.render.chunk.data.ChunkMeshData;
@@ -37,10 +36,12 @@ import java.util.Map;
 public class ChunkRenderRebuildTask extends ChunkRenderBuildTask {
     private final RenderSection render;
     private final ChunkRenderContext context;
+    private final int frame;
 
-    public ChunkRenderRebuildTask(RenderSection render, ChunkRenderContext context) {
+    public ChunkRenderRebuildTask(RenderSection render, ChunkRenderContext context, int frame) {
         this.render = render;
         this.context = context;
+        this.frame = frame;
     }
 
     @Override
@@ -153,7 +154,7 @@ public class ChunkRenderRebuildTask extends ChunkRenderBuildTask {
         renderData.setOcclusionData(occluder.build());
         renderData.setBounds(bounds.build(this.render.getChunkPos()));
 
-        return new ChunkBuildResult(this.render, renderData.build(), meshes);
+        return new ChunkBuildResult(this.render, renderData.build(), meshes, this.frame);
     }
 
     @Override

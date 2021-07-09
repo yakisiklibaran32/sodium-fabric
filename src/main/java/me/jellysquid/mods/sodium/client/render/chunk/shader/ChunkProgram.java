@@ -43,7 +43,7 @@ public class ChunkProgram extends GlProgram {
 
     public ChunkProgram(RenderDevice owner, int handle, ChunkShaderOptions options,
                            @Nullable ProgramUniforms irisProgramUniforms, @Nullable ProgramSamplers irisProgramSamplers) {
-        super(owner, handle);
+        super(handle);
 
         this.uModelViewProjectionMatrix = this.getUniformLocation("u_ModelViewProjectionMatrix");
 
@@ -54,7 +54,7 @@ public class ChunkProgram extends GlProgram {
         this.uTextureScale = this.getUniformLocation("u_TextureScale");
         this.uRegionOrigin = this.getUniformLocation("u_RegionOrigin");
 
-        this.fogShader = options.fogMode.getFactory().apply(this);
+        this.fogShader = options.fog().getFactory().apply(this);
 
         this.uModelViewMatrix = this.getUniformLocation("u_ModelViewMatrix");
         this.uProjectionMatrix = this.getUniformLocation("u_ProjectionMatrix");

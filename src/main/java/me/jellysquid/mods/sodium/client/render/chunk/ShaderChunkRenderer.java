@@ -66,17 +66,12 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
 
     // TODO: Define these in the render pass itself
     protected String getShaderName(BlockRenderPass pass) {
-        switch (pass) {
-            case CUTOUT:
-                return "blocks/block_layer_cutout";
-            case CUTOUT_MIPPED:
-                return "blocks/block_layer_cutout_mipped";
-            case TRANSLUCENT:
-            case TRIPWIRE:
-                return "blocks/block_layer_translucent";
-            default:
-                return "blocks/block_layer_solid";
-        }
+        return switch (pass) {
+            case CUTOUT -> "blocks/block_layer_cutout";
+            case CUTOUT_MIPPED -> "blocks/block_layer_cutout_mipped";
+            case TRANSLUCENT, TRIPWIRE -> "blocks/block_layer_translucent";
+            default -> "blocks/block_layer_solid";
+        };
     }
 
     private GlShader createVertexShader(RenderDevice device, boolean isShadowPass, BlockRenderPass pass,
@@ -96,12 +91,12 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
             String fullName = "patched_" + name + "_for_sodium.vsh";
 
             if (irisVertexShader.isPresent()) {
-                return new GlShader(device, ShaderType.VERTEX, new Identifier("iris", fullName),
+                return new GlShader(ShaderType.VERTEX, new Identifier("iris", fullName),
                         irisVertexShader.get());
             }
         }
 
-        return ShaderLoader.loadShader(device, ShaderType.VERTEX,
+        return ShaderLoader.loadShader(ShaderType.VERTEX,
                 new Identifier("sodium", getShaderName(pass) + ".vsh"), constants);
     }
 
@@ -133,12 +128,12 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
             String fullName = "patched_" + name + "_for_sodium.fsh";
 
             if (irisFragmentShader.isPresent()) {
-                return new GlShader(device, ShaderType.FRAGMENT, new Identifier("iris", fullName),
+                return new GlShader(ShaderType.FRAGMENT, new Identifier("iris", fullName),
                         irisFragmentShader.get());
             }
         }
 
-        return ShaderLoader.loadShader(device, ShaderType.FRAGMENT,
+        return ShaderLoader.loadShader(ShaderType.FRAGMENT,
                 new Identifier("sodium", getShaderName(pass) + ".fsh"), constants);
     }
 
@@ -201,8 +196,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
 
         boolean isShadowPass = ShadowRenderingState.areShadowsCurrentlyBeingRendered();
 
-        ChunkShaderOptions options = new ChunkShaderOptions();
-        options.fogMode = ChunkFogMode.SMOOTH;
+        ChunkShaderOptions options = new ChunkShaderOptions(ChunkFogMode.SMOOTH);
 
         this.activeProgram = this.compileProgram(isShadowPass, pass, options, sodiumTerrainPipeline);
         this.activeProgram.bind();
