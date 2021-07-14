@@ -20,6 +20,7 @@ import net.coderbot.iris.shaderpack.IdMap;
 import net.minecraft.block.BlockState;
 import me.jellysquid.mods.sodium.client.util.NativeBuffer;
 import net.minecraft.client.render.RenderLayer;
+import net.minecraft.util.math.Vec3i;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -71,7 +72,7 @@ public class ChunkBuildBuffers {
         }
     }
 
-    public void init(ChunkRenderData.Builder renderData) {
+    public void init(ChunkRenderData.Builder renderData, Vec3i pos) {
         for (VertexBufferBuilder vertexBuffer : this.vertexBuffers) {
             vertexBuffer.start();
         }
@@ -86,7 +87,7 @@ public class ChunkBuildBuffers {
             ModelVertexSink vertexSink = this.vertexType.createBufferWriter(this.vertexBuffers[i], idHolder);
             IndexBufferBuilder[] indexBuffers = this.indexBuffers[i];
 
-            this.delegates[i] = new BakedChunkModelBuilder(indexBuffers, vertexSink, renderData);
+            this.delegates[i] = new BakedChunkModelBuilder(indexBuffers, vertexSink, renderData, pos);
         }
     }
 
