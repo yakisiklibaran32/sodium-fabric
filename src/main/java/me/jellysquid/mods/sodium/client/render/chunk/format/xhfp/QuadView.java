@@ -11,22 +11,22 @@ public class QuadView {
 
     float x(int index, boolean unsafe) {
         if(unsafe) {
-            return XHFPModelVertexType.decodePosition(MemoryUtil.memGetShort(writePointer + 4 - STRIDE * (3 - index)));
+            return XHFPModelVertexType.decodePosition(MemoryUtil.memGetShort(writePointer - STRIDE * (3 - index)));
         }
-        return XHFPModelVertexType.decodePosition(buffer.getShort(writeOffset + 4 - STRIDE * (3 - index)));
+        return XHFPModelVertexType.decodePosition(buffer.getShort(writeOffset - STRIDE * (3 - index)));
     }
 
     float y(int index, boolean unsafe) {
         if(unsafe) {
-            return XHFPModelVertexType.decodePosition(MemoryUtil.memGetShort(writePointer + 6 - STRIDE * (3 - index)));
+            return XHFPModelVertexType.decodePosition(MemoryUtil.memGetShort(writePointer + 2 - STRIDE * (3 - index)));
         }
-        return XHFPModelVertexType.decodePosition(buffer.getShort(writeOffset + 6 - STRIDE * (3 - index)));
+        return XHFPModelVertexType.decodePosition(buffer.getShort(writeOffset + 2 - STRIDE * (3 - index)));
     }
 
     float z(int index, boolean unsafe) {
         if(unsafe) {
-            return XHFPModelVertexType.decodePosition(MemoryUtil.memGetShort(writePointer + 8 - STRIDE * (3 - index)));
+            return XHFPModelVertexType.decodePosition(MemoryUtil.memGetShort(writePointer + 4 - STRIDE * (3 - index)));
         }
-        return XHFPModelVertexType.decodePosition(buffer.getShort(writeOffset + 8 - STRIDE * (3 - index)));
+        return XHFPModelVertexType.decodePosition(buffer.getShort(writeOffset + 4 - STRIDE * (3 - index)));
     }
 }
