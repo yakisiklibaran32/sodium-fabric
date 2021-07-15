@@ -153,7 +153,7 @@ public class SodiumGameOptionPages {
                 .add(OptionImpl.createBuilder(SupportedGraphicsMode.class, vanillaOpts)
                         .setName(new TranslatableText("options.graphics"))
                         .setTooltip(new TranslatableText("sodium.options.graphics_quality.tooltip"))
-                        .setControl(option -> new CyclingControl<>(option, SupportedGraphicsMode.class, new String[] { "Fast", "Fancy"/*, "Fabulous"*/ }))
+                        .setControl(option -> new CyclingControl<>(option, SupportedGraphicsMode.class, new Text[] { new TranslatableText("options.graphics.fast"), new TranslatableText("options.graphics.fancy")/*, new TranslatableText("options.graphics.fabulous") */}))
                         .setBinding(
                                 (opts, value) -> opts.graphicsMode = value.toVanilla(),
                                 opts -> SupportedGraphicsMode.fromVanilla(opts.graphicsMode))
