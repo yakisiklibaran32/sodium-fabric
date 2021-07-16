@@ -85,7 +85,7 @@ public class FluidRenderer {
             }
         }
 
-        BlockPos pos = this.scratchPos.set(x + dir.getOffsetX(), y + dir.getOffsetY(), z + dir.getOffsetZ());
+        BlockPos pos = this.scratchPos.set(x, y, z);
         return !world.getFluidState(pos).getFluid().matchesType(fluid);
     }
 
