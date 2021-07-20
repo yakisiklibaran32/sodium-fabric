@@ -6,3 +6,9 @@ accessible class net/minecraft/client/texture/Sprite$Interpolation
 
 accessible method net/minecraft/client/texture/Sprite$Interpolation apply ()V
 accessible method net/minecraft/client/render/Frustum isVisible (DDDDDD)Z
+
+
+# dumb hack because loom doesn't apply access wideners of dependencies at runtime in development environments
+# ugh
+# this isn't needed at runtime, it's just for the purposes of developing iris & the sodium fork together.
+accessible  class   com/mojang/blaze3d/platform/GlStateManager$FogState
