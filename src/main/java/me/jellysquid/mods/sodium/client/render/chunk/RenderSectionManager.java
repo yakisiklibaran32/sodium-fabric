@@ -35,6 +35,7 @@ import me.jellysquid.mods.sodium.common.util.DirectionUtil;
 import me.jellysquid.mods.sodium.common.util.collections.FutureQueueDrainingIterator;
 import me.jellysquid.mods.sodium.common.util.collections.QueueDrainingIterator;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
@@ -154,6 +155,7 @@ public class RenderSectionManager implements ChunkStatusListener {
         ObjectList<BlockEntity> visibleBlockEntitiesTmp = visibleBlockEntities;
         visibleBlockEntities = visibleBlockEntitiesSwap;
         visibleBlockEntitiesSwap = visibleBlockEntitiesTmp;
+        ShadowRenderer.visibleBlockEntities = visibleBlockEntities;
 
         boolean needsUpdateTmp = needsUpdate;
         needsUpdate = needsUpdateSwap;
@@ -244,6 +246,7 @@ public class RenderSectionManager implements ChunkStatusListener {
         if (!blockEntities.isEmpty()) {
             this.visibleBlockEntities.addAll(blockEntities);
         }
+        ShadowRenderer.visibleBlockEntities = visibleBlockEntities;
     }
 
     private void resetLists() {
@@ -254,6 +257,7 @@ public class RenderSectionManager implements ChunkStatusListener {
         }
 
         this.visibleBlockEntities.clear();
+        ShadowRenderer.visibleBlockEntities.clear();
         this.chunkRenderList.clear();
         this.tickableChunks.clear();
     }
