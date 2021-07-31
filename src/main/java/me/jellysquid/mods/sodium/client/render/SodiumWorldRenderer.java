@@ -17,6 +17,7 @@ import me.jellysquid.mods.sodium.client.util.NativeBuffer;
 import me.jellysquid.mods.sodium.client.util.math.FrustumExtended;
 import me.jellysquid.mods.sodium.client.world.ChunkStatusListener;
 import me.jellysquid.mods.sodium.client.world.ClientChunkManagerExtended;
+import me.jellysquid.mods.sodium.client.world.WorldRendererExtended;
 import me.jellysquid.mods.sodium.common.util.ListUtil;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.minecraft.block.entity.BlockEntity;
@@ -40,8 +41,6 @@ import java.util.*;
  * Provides an extension to vanilla's {@link WorldRenderer}.
  */
 public class SodiumWorldRenderer implements ChunkStatusListener {
-    private static SodiumWorldRenderer instance;
-
     private final MinecraftClient client;
 
     private ClientWorld world;
@@ -60,29 +59,13 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
     private ChunkRenderer chunkRenderer;
 
     /**
-     * Instantiates Sodium's world renderer. This should be called at the time of the world renderer initialization.
-     */
-    public static SodiumWorldRenderer create() {
-        if (instance == null) {
-            instance = new SodiumWorldRenderer(MinecraftClient.getInstance());
-        }
-
-        return instance;
-    }
-
-    /**
-     * @throws IllegalStateException If the renderer has not yet been created
-     * @return The current instance of this type
+     * @return The SodiumWorldRenderer based on the current dimension
      */
     public static SodiumWorldRenderer getInstance() {
-        if (instance == null) {
-            throw new IllegalStateException("Renderer not initialized");
-        }
-
-        return instance;
+        return ((WorldRendererExtended) MinecraftClient.getInstance().worldRenderer).getSodiumWorldRenderer();
     }
 
-    private SodiumWorldRenderer(MinecraftClient client) {
+    public SodiumWorldRenderer(MinecraftClient client) {
         this.client = client;
     }
 
@@ -365,13 +348,18 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
             return true;
         }
 
-        int minX = MathHelper.floor(box.minX - 0.5D) >> 4;
-        int minY = MathHelper.floor(box.minY - 0.5D) >> 4;
-        int minZ = MathHelper.floor(box.minZ - 0.5D) >> 4;
+        return this.isBoxVisible(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
+    }
 
-        int maxX = MathHelper.floor(box.maxX + 0.5D) >> 4;
-        int maxY = MathHelper.floor(box.maxY + 0.5D) >> 4;
-        int maxZ = MathHelper.floor(box.maxZ + 0.5D) >> 4;
+
+    public boolean isBoxVisible(double x1, double y1, double z1, double x2, double y2, double z2) {
+        int minX = MathHelper.floor(x1 - 0.5D) >> 4;
+        int minY = MathHelper.floor(y1 - 0.5D) >> 4;
+        int minZ = MathHelper.floor(z1 - 0.5D) >> 4;
+
+        int maxX = MathHelper.floor(x2 + 0.5D) >> 4;
+        int maxY = MathHelper.floor(y2 + 0.5D) >> 4;
+        int maxZ = MathHelper.floor(z2 + 0.5D) >> 4;
 
         for (int x = minX; x <= maxX; x++) {
             for (int z = minZ; z <= maxZ; z++) {

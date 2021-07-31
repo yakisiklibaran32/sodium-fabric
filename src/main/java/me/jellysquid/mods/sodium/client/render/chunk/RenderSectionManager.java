@@ -35,6 +35,7 @@ import me.jellysquid.mods.sodium.common.util.DirectionUtil;
 import me.jellysquid.mods.sodium.common.util.collections.FutureQueueDrainingIterator;
 import me.jellysquid.mods.sodium.common.util.collections.QueueDrainingIterator;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
@@ -169,6 +170,10 @@ public class RenderSectionManager implements ChunkStatusListener {
         this.iterateChunks(camera, frustum, frame, spectator);
 
         this.needsUpdate = false;
+
+        if(ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+            ShadowRenderer.visibleBlockEntities = visibleBlockEntities;
+        }
     }
 
     private void setup(Camera camera) {
@@ -217,7 +222,7 @@ public class RenderSectionManager implements ChunkStatusListener {
     }
 
     private void schedulePendingUpdates(RenderSection section) {
-        if (section.getPendingUpdate() == null || !this.adjacencyMap.hasNeighbors(section.getChunkX(), section.getChunkZ())) {
+        if (ShadowRenderingState.areShadowsCurrentlyBeingRendered() || section.getPendingUpdate() == null || !this.adjacencyMap.hasNeighbors(section.getChunkX(), section.getChunkZ())) {
             return;
         }
 
@@ -359,6 +364,7 @@ public class RenderSectionManager implements ChunkStatusListener {
         this.needsUpdate |= this.performPendingUploads();
 
         if (!blockingFutures.isEmpty()) {
+            this.needsUpdate = true;
             this.regions.upload(RenderDevice.INSTANCE.createCommandList(), new FutureQueueDrainingIterator<>(blockingFutures));
         }
 
