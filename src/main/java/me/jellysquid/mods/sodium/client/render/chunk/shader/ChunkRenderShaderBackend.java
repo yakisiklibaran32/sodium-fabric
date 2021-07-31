@@ -137,6 +137,9 @@ public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState>
                     });
         } finally {
             vertShader.delete();
+            if (geomShader != null) {
+                geomShader.delete();
+            }
             fragShader.delete();
         }
     }
