@@ -59,6 +59,25 @@ public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState>
                 new Identifier("sodium", "chunk_gl20.v.glsl"), fogMode.getDefines());
     }
 
+    private GlShader createGeometryShader(RenderDevice device, ChunkFogMode fogMode, BlockRenderPass pass, boolean shadow, SodiumTerrainPipeline pipeline) {
+        if (pipeline != null) {
+            Optional<String> irisGeometryShader;
+
+            if (shadow) {
+                irisGeometryShader = pipeline.getShadowGeometryShaderSource();
+            } else {
+                irisGeometryShader = pass.isTranslucent() ? pipeline.getTranslucentGeometryShaderSource() : pipeline.getTerrainGeometryShaderSource();
+            }
+
+            if (irisGeometryShader.isPresent()) {
+                return new GlShader(device, ShaderType.GEOMETRY, new Identifier("iris", "sodium-terrain.gsh"),
+                        irisGeometryShader.get(), ShaderConstants.builder().build());
+            }
+        }
+
+        return null;
+    }
+
     private GlShader createFragmentShader(RenderDevice device, ChunkFogMode fogMode, BlockRenderPass pass, boolean shadow, SodiumTerrainPipeline pipeline) {
         if (pipeline != null) {
             Optional<String> irisFragmentShader;
@@ -83,11 +102,13 @@ public abstract class ChunkRenderShaderBackend<T extends ChunkGraphicsState>
                                       GlVertexFormat<ChunkMeshAttribute> vertexFormat, boolean shadow,
                                       SodiumTerrainPipeline pipeline) {
         GlShader vertShader = createVertexShader(device, fogMode, pass, shadow, pipeline);
+        GlShader geomShader = createGeometryShader(device, fogMode, pass, shadow, pipeline);
         GlShader fragShader = createFragmentShader(device, fogMode, pass, shadow, pipeline);
 
         try {
             return GlProgram.builder(new Identifier("sodium", "chunk_shader_for_" + pass.toString().toLowerCase(Locale.ROOT) + (shadow ? "_gbuffer" : "_shadow")))
                     .attachShader(vertShader)
+                    .attachShader(geomShader)
                     .attachShader(fragShader)
                     .bindAttribute("a_Pos", ChunkShaderBindingPoints.POSITION)
                     .bindAttribute("a_Color", ChunkShaderBindingPoints.COLOR)
