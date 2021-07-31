@@ -203,6 +203,9 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
                     });
         } finally {
             vertShader.delete();
+            if (geomShader != null) {
+                geomShader.delete();
+            }
             fragShader.delete();
         }
     }
