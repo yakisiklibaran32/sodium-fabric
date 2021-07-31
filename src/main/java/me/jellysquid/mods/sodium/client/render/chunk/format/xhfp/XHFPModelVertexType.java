@@ -37,14 +37,14 @@ public class XHFPModelVertexType implements ChunkVertexType {
 
     @Override
     public ModelVertexSink createBufferWriter(VertexBufferView buffer, boolean direct) {
-        return createBufferWriter(buffer, direct, new MaterialIdHolder());
+        return direct ? new XHFPModelVertexBufferWriterUnsafe(buffer, new MaterialIdHolder()) : new XHFPModelVertexBufferWriterNio(buffer, new MaterialIdHolder());
     }
 
     @Override
     public ModelVertexSink createBufferWriter(VertexBufferView buffer, boolean direct, MaterialIdHolder idHolder) {
         //return direct ? new HFPModelVertexBufferWriterUnsafe(buffer) : new HFPModelVertexBufferWriterNio(buffer);
 
-        return new XHFPModelVertexBufferWriterNio(buffer, idHolder);
+        return direct ? new XHFPModelVertexBufferWriterUnsafe(buffer, idHolder) : new XHFPModelVertexBufferWriterNio(buffer, idHolder);
     }
 
     @Override
