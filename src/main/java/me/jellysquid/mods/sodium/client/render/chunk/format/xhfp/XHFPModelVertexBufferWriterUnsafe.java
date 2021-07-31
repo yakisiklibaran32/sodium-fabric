@@ -82,9 +82,9 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
         // NB: We don't set midTexCoord, normal, and tangent here, they will be filled in later.
         // block ID
         MemoryUtil.memPutShort(i + 32, materialId);
-        MemoryUtil.memPutShort(i + 36, renderType);
+        MemoryUtil.memPutShort(i + 34, renderType);
+        MemoryUtil.memPutShort(i + 36, (short) 0);
         MemoryUtil.memPutShort(i + 38, (short) 0);
-        MemoryUtil.memPutShort(i + 40, (short) 0);
 
         if (vertexCount == 4) {
             // TODO: Consider applying similar vertex coordinate transformations as the normal HFP texture coordinates
