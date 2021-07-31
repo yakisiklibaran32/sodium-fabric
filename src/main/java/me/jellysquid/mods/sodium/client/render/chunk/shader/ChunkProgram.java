@@ -3,6 +3,7 @@ package me.jellysquid.mods.sodium.client.render.chunk.shader;
 import me.jellysquid.mods.sodium.client.gl.shader.GlProgram;
 import me.jellysquid.mods.sodium.client.gl.device.RenderDevice;
 import me.jellysquid.mods.sodium.client.render.GameRendererContext;
+import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 import org.lwjgl.opengl.GL20C;
@@ -33,10 +34,14 @@ public class ChunkProgram extends GlProgram {
     @Nullable
     private final ProgramUniforms irisProgramUniforms;
 
+    @Nullable
+    private final ProgramSamplers irisProgramSamplers;
+
     // The fog shader component used by this program in order to setup the appropriate GL state
     private final ChunkShaderFogComponent fogShader;
 
-    protected ChunkProgram(RenderDevice owner, Identifier name, int handle, Function<ChunkProgram, ChunkShaderFogComponent> fogShaderFunction, @Nullable ProgramUniforms irisProgramUniforms) {
+    protected ChunkProgram(RenderDevice owner, Identifier name, int handle, Function<ChunkProgram, ChunkShaderFogComponent> fogShaderFunction,
+                           @Nullable ProgramUniforms irisProgramUniforms, @Nullable ProgramSamplers irisProgramSamplers) {
         super(owner, name, handle);
 
         this.uModelViewProjectionMatrix = this.getUniformLocation("u_ModelViewProjectionMatrix");
@@ -49,6 +54,7 @@ public class ChunkProgram extends GlProgram {
         this.modelViewMatrixOffset = this.getUniformLocation("u_ModelViewMatrix");
         this.normalMatrixOffset = this.getUniformLocation("u_NormalMatrix");
         this.irisProgramUniforms = irisProgramUniforms;
+        this.irisProgramSamplers = irisProgramSamplers;
 
         this.fogShader = fogShaderFunction.apply(this);
     }
@@ -69,6 +75,10 @@ public class ChunkProgram extends GlProgram {
 
         if (irisProgramUniforms != null) {
             irisProgramUniforms.update();
+        }
+
+        if (irisProgramSamplers != null) {
+            irisProgramSamplers.update();
         }
 
         Matrix4f modelViewMatrix = matrixStack.peek().getModel();

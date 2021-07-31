@@ -28,10 +28,11 @@
   ],
   "depends": {
     "fabricloader": ">=0.8.0",
-    "iris": "*"
+    "iris": ">=1.1.0-pre"
   },
   "breaks": {
     "optifabric": "*",
-    "canvas": "*"
+    "canvas": "*",
+    "sodium-extra": "<=0.3.1"
   }
 }

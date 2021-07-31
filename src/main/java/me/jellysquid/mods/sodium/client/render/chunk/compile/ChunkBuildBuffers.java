@@ -15,9 +15,8 @@ import me.jellysquid.mods.sodium.client.render.chunk.format.MaterialIdHolder;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPassManager;
 import me.jellysquid.mods.sodium.client.util.UnsafeUtil;
-import net.coderbot.iris.Iris;
+import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.shaderpack.IdMap;
-import net.coderbot.iris.shaderpack.ShaderPack;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.client.render.RenderLayer;
@@ -49,7 +48,7 @@ public class ChunkBuildBuffers {
 
         this.offset = new ChunkModelOffset();
 
-        IdMap map = Iris.getCurrentPack().map(ShaderPack::getIdMap).orElse(null);
+        IdMap map = BlockRenderingSettings.INSTANCE.getIdMap();
 
         if (map != null) {
             this.idHolder = new MaterialIdHolder(map.getBlockProperties());
