@@ -90,7 +90,6 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
             // https://github.com/IrisShaders/ShaderDoc/blob/master/vertex-format-extensions.md#surface-normal-vector
 
             currentQuad.writePointer = this.writePointer;
-            currentQuad.UNSAFE = this.UNSAFE;
             NormalHelper.computeFaceNormal(normal, currentQuad, true);
             int packedNormal = NormalHelper.packNormal(normal, 0.0f);
 
