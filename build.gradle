@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '0.6-SNAPSHOT'
+    id 'fabric-loom' version '0.7-SNAPSHOT'
     id 'org.ajoberstar.grgit' version '4.1.0'
 }
 
@@ -21,7 +21,7 @@ dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    modImplementation "net.coderbot.iris_mc1_16_5:iris:1.1.1-pre+"
+    modImplementation "net.coderbot.iris_mc1_16_5:iris:1.1.2-pre+"
 }
 
 if (project.use_third_party_mods) {
