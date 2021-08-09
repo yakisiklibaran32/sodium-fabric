@@ -210,7 +210,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         }
     }
 
-    protected void begin(BlockRenderPass pass, MatrixStack matrixStack) {
+    protected void begin(BlockRenderPass pass) {
         if (Iris.getPipelineManager().isSodiumShaderReloadNeeded()) {
             deleteAllPrograms();
             Iris.getPipelineManager().clearSodiumShaderReloadNeeded();
@@ -229,7 +229,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
 
         this.activeProgram = this.compileProgram(isShadowPass, pass, options, sodiumTerrainPipeline);
         this.activeProgram.bind();
-        this.activeProgram.setup(matrixStack, this.vertexType);
+        this.activeProgram.setup(this.vertexType);
 
         if (isShadowPass) {
             // No back face culling during the shadow pass
