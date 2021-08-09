@@ -20,7 +20,6 @@ import java.nio.FloatBuffer;
  */
 public class ChunkProgram extends GlProgram {
     // Uniform variable binding indexes
-    private final int uModelViewProjectionMatrix;
     private final int uModelScale;
     private final int uModelOffset;
     private final int uTextureScale;
@@ -36,7 +35,7 @@ public class ChunkProgram extends GlProgram {
     @Nullable
     private final ProgramSamplers irisProgramSamplers;
 
-    public final int uCameraTranslation;
+    public final int uModelViewProjectionMatrix;
     public final int uboDrawParametersIndex;
 
     // The fog shader component used by this program in order to setup the appropriate GL state
@@ -53,7 +52,6 @@ public class ChunkProgram extends GlProgram {
         this.uModelScale = this.getUniformLocation("u_ModelScale");
         this.uModelOffset = this.getUniformLocation("u_ModelOffset");
         this.uTextureScale = this.getUniformLocation("u_TextureScale");
-        this.uCameraTranslation = this.getUniformLocation("u_CameraTranslation");
 
         this.uboDrawParametersIndex = this.getUniformBlockIndex("ubo_DrawParameters");
 
@@ -66,7 +64,7 @@ public class ChunkProgram extends GlProgram {
         this.irisProgramSamplers = irisProgramSamplers;
     }
 
-    public void setup(MatrixStack matrixStack, ChunkVertexType vertexType) {
+    public void setup(ChunkVertexType vertexType) {
         RenderSystem.activeTexture(TextureUnit.TERRAIN.getUnitId());
         RenderSystem.bindTexture(RenderSystem.getShaderTexture(0));
 
