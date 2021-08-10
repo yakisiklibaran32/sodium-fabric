@@ -27,8 +27,8 @@ import java.util.Map;
 import java.util.Optional;
 
 public abstract class ShaderChunkRenderer implements ChunkRenderer {
-    private final Map<BlockRenderPass, Map<ChunkShaderOptions, GlProgram<ChunkShaderInterface>>> gbufferPrograms = new Object2ObjectOpenHashMap<>();
-    private final Map<BlockRenderPass, Map<ChunkShaderOptions, GlProgram<ChunkShaderInterface>>> shadowPrograms = new Object2ObjectOpenHashMap<>();
+    private final Map<ChunkShaderOptions, GlProgram<ChunkShaderInterface>> gbufferPrograms = new Object2ObjectOpenHashMap<>();
+    private final Map<ChunkShaderOptions, GlProgram<ChunkShaderInterface>> shadowPrograms = new Object2ObjectOpenHashMap<>();
 
     protected final ChunkVertexType vertexType;
     protected final GlVertexFormat<ChunkMeshAttribute> vertexFormat;
@@ -45,13 +45,13 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
 
     // TODO: Generalize shader options
     protected GlProgram<ChunkShaderInterface> compileProgram(BlockRenderPass pass, boolean isShadowPass, ChunkShaderOptions options, SodiumTerrainPipeline pipeline) {
-        Map<BlockRenderPass, Map<ChunkShaderOptions, GlProgram<ChunkShaderInterface>>> programMap =
+        Map<Map<ChunkShaderOptions, GlProgram<ChunkShaderInterface>>> programMap =
                 isShadowPass ? shadowPrograms : gbufferPrograms;
 
         Map<ChunkShaderOptions, GlProgram<ChunkShaderInterface>> programs = programMap.get(pass);
 
         if (programs == null) {
-            programMap.put(pass, programs = new Object2ObjectOpenHashMap<>());
+            programMap.put(programs = new Object2ObjectOpenHashMap<>());
         }
 
         GlProgram<ChunkShaderInterface> program = programs.get(options);
@@ -63,106 +63,8 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         return program;
     }
 
-    // TODO: Define these in the render pass itself
-    protected String getShaderName(BlockRenderPass pass) {
-        return switch (pass) {
-            case CUTOUT -> "blocks/block_layer_cutout";
-            case CUTOUT_MIPPED -> "blocks/block_layer_cutout_mipped";
-            case TRANSLUCENT, TRIPWIRE -> "blocks/block_layer_translucent";
-            default -> "blocks/block_layer_solid";
-        };
-    }
-
-    private GlShader createVertexShader(RenderDevice device, boolean isShadowPass, BlockRenderPass pass,
-                                        SodiumTerrainPipeline pipeline, ShaderConstants constants) {
-        if (pipeline != null) {
-            Optional<String> irisVertexShader;
-            String name;
-
-            if (isShadowPass) {
-                irisVertexShader = pipeline.getShadowVertexShaderSource();
-                name = "shadow_terrain";
-            } else {
-                irisVertexShader = pass.isTranslucent() ? pipeline.getTranslucentVertexShaderSource() : pipeline.getTerrainVertexShaderSource();
-                name = pass.isTranslucent() ? "terrain_translucent" : "terrain";
-            }
-
-            String fullName = "patched_" + name + "_for_sodium.vsh";
-
-            if (irisVertexShader.isPresent()) {
-                return new GlShader(ShaderType.VERTEX, new Identifier("iris", fullName),
-                        irisVertexShader.get());
-            }
-        }
-
-        return ShaderLoader.loadShader(ShaderType.VERTEX,
-                new Identifier("sodium", getShaderName(pass) + ".vsh"), constants);
-    }
-
-    private GlShader createGeometryShader(RenderDevice device, boolean isShadowPass, BlockRenderPass pass,
-                                        SodiumTerrainPipeline pipeline, ShaderConstants constants) {
-        if (pipeline != null) {
-            Optional<String> irisGeometryShader;
-            String name;
-
-            if (isShadowPass) {
-                irisGeometryShader = pipeline.getShadowGeometryShaderSource();
-                name = "shadow_terrain";
-            } else {
-                irisGeometryShader = pass.isTranslucent() ? pipeline.getTranslucentGeometryShaderSource() : pipeline.getTerrainGeometryShaderSource();
-                name = pass.isTranslucent() ? "terrain_translucent" : "terrain";
-            }
-
-            String fullName = "patched_" + name + "_for_sodium.gsh";
-
-            if (irisGeometryShader.isPresent()) {
-                return new GlShader(ShaderType.GEOMETRY, new Identifier("iris", fullName),
-                        irisGeometryShader.get());
-            }
-        }
-
-        return null;
-    }
-
-    private GlShader createFragmentShader(RenderDevice device, boolean isShadowPass, BlockRenderPass pass,
-                                          SodiumTerrainPipeline pipeline, ShaderConstants constants) {
-        if (pipeline != null) {
-            Optional<String> irisFragmentShader;
-            String name;
-
-            if (isShadowPass) {
-                if (pass == BlockRenderPass.CUTOUT || pass == BlockRenderPass.CUTOUT_MIPPED) {
-                    irisFragmentShader = pipeline.getShadowCutoutFragmentShaderSource();
-                    name = "shadow_terrain_cutout";
-                } else {
-                    irisFragmentShader = pipeline.getShadowFragmentShaderSource();
-                    name = "shadow_terrain";
-                }
-            } else if (pass == BlockRenderPass.CUTOUT || pass == BlockRenderPass.CUTOUT_MIPPED) {
-                irisFragmentShader = pipeline.getTerrainCutoutFragmentShaderSource();
-                name = "terrain_cutout";
-            } else if (pass.isTranslucent()) {
-                irisFragmentShader = pipeline.getTranslucentFragmentShaderSource();
-                name = "terrain_translucent";
-            } else {
-                irisFragmentShader = pipeline.getTerrainFragmentShaderSource();
-                name = "terrain";
-            }
-
-            String fullName = "patched_" + name + "_for_sodium.fsh";
-
-            if (irisFragmentShader.isPresent()) {
-                return new GlShader(ShaderType.FRAGMENT, new Identifier("iris", fullName),
-                        irisFragmentShader.get());
-            }
-        }
-
-        return ShaderLoader.loadShader(ShaderType.FRAGMENT,
-                new Identifier("sodium", getShaderName(pass) + ".fsh"), constants);
-    }
-
     private GlProgram<ChunkShaderInterface> createShader(boolean isShadowPass, BlockRenderPass pass,
-                                      ChunkShaderOptions options, SodiumTerrainPipeline pipeline) {
+                                                         ChunkShaderOptions options, SodiumTerrainPipeline pipeline) {
         ShaderConstants constants = options.constants();
 
         GlShader vertShader = createVertexShader(device, isShadowPass, pass, pipeline, constants);
@@ -209,6 +111,57 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         }
     }
 
+    private GlShader createVertexShader(RenderDevice device, boolean isShadowPass, BlockRenderPass pass,
+                                        SodiumTerrainPipeline pipeline, ShaderConstants constants) {
+        if (pipeline != null) {
+            Optional<String> irisVertexShader;
+            String name;
+
+            if (isShadowPass) {
+                irisVertexShader = pipeline.getShadowVertexShaderSource();
+                name = "shadow_terrain";
+            } else {
+                irisVertexShader = pass.isTranslucent() ? pipeline.getTranslucentVertexShaderSource() : pipeline.getTerrainVertexShaderSource();
+                name = pass.isTranslucent() ? "terrain_translucent" : "terrain";
+            }
+
+            String fullName = "patched_" + name + "_for_sodium.vsh";
+
+            if (irisVertexShader.isPresent()) {
+                return new GlShader(ShaderType.VERTEX, new Identifier("iris", fullName),
+                        irisVertexShader.get());
+            }
+        }
+
+        return ShaderLoader.loadShader(ShaderType.VERTEX,
+                new Identifier("sodium", getShaderName(pass) + ".vsh"), constants);
+    }
+
+    private GlShader createGeometryShader(RenderDevice device, boolean isShadowPass, BlockRenderPass pass,
+                                          SodiumTerrainPipeline pipeline, ShaderConstants constants) {
+        if (pipeline != null) {
+            Optional<String> irisGeometryShader;
+            String name;
+
+            if (isShadowPass) {
+                irisGeometryShader = pipeline.getShadowGeometryShaderSource();
+                name = "shadow_terrain";
+            } else {
+                irisGeometryShader = pass.isTranslucent() ? pipeline.getTranslucentGeometryShaderSource() : pipeline.getTerrainGeometryShaderSource();
+                name = pass.isTranslucent() ? "terrain_translucent" : "terrain";
+            }
+
+            String fullName = "patched_" + name + "_for_sodium.gsh";
+
+            if (irisGeometryShader.isPresent()) {
+                return new GlShader(ShaderType.GEOMETRY, new Identifier("iris", fullName),
+                        irisGeometryShader.get());
+            }
+        }
+
+        return null;
+    }
+
     protected void begin(BlockRenderPass pass) {
         if (Iris.getPipelineManager().isSodiumShaderReloadNeeded()) {
             deleteAllPrograms();
@@ -224,9 +177,9 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
 
         boolean isShadowPass = ShadowRenderingState.areShadowsCurrentlyBeingRendered();
 
-        ChunkShaderOptions options = new ChunkShaderOptions(ChunkFogMode.SMOOTH);
+        ChunkShaderOptions options = new ChunkShaderOptions(ChunkFogMode.SMOOTH, pass);
 
-        this.activeProgram = this.compileProgram(pass, isShadowPass, options, sodiumTerrainPipeline);
+        this.activeProgram = this.compileProgram(isShadowPass, options, sodiumTerrainPipeline);
         this.activeProgram.bind();
         this.activeProgram.getInterface()
                 .setup(this.vertexType);
@@ -263,7 +216,13 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
     }
 
-    private void deletePrograms(Map<BlockRenderPass, Map<ChunkShaderOptions, GlProgram<ChunkShaderInterface>>> programs) {
+    @Override
+    public void delete() {
+        deletePrograms(shadowPrograms);
+        deletePrograms(gbufferPrograms);
+    }
+
+        private void deletePrograms(Map<Map<ChunkShaderOptions, GlProgram<ChunkShaderInterface>>> programs) {
         programs.values()
                 .stream()
                 .flatMap(i -> i.values().stream())
