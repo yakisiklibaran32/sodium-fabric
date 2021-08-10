@@ -53,7 +53,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         GlProgram<ChunkShaderInterface> program = programMap.get(options);
 
         if (program == null) {
-            programMap.put(options, program = this.createShader("blocks/block_layer_opaque", isShadowPass, pipeline, options));
+            programMap.put(options, program = this.createShader(isShadowPass, pipeline, options));
         }
 
         return program;
@@ -62,9 +62,9 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
     private GlProgram<ChunkShaderInterface> createShader(String path, boolean isShadowPass, SodiumTerrainPipeline pipeline, ChunkShaderOptions options) {
         ShaderConstants constants = options.constants();
 
-        GlShader vertShader = createVertexShader(device, isShadowPass, options.pass(), pipeline, constants);
-        GlShader geomShader = createGeometryShader(device, isShadowPass, options.pass(), pipeline, constants);
-        GlShader fragShader = createFragmentShader(device, isShadowPass, options.pass(), pipeline, constants);
+        GlShader vertShader = createVertexShader(device, isShadowPass, options, pipeline, constants);
+        GlShader geomShader = createGeometryShader(device, isShadowPass, options, pipeline, constants);
+        GlShader fragShader = createFragmentShader(device, isShadowPass, options, pipeline, constants);
 
         try {
             return GlProgram.builder(new Identifier("sodium", "chunk_shader"))
