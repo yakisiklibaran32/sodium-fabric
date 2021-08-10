@@ -6,19 +6,25 @@ import net.minecraft.client.render.RenderLayer;
 public class BlockRenderPass {
     private final RenderLayer layer;
     private final boolean translucent;
+    private final boolean cutout;
 
     private final RenderPassShader vertexShader;
     private final RenderPassShader fragmentShader;
 
-    BlockRenderPass(RenderLayer layer, boolean translucent, RenderPassShader vertexShader, RenderPassShader fragmentShader) {
+    BlockRenderPass(RenderLayer layer, boolean translucent, boolean cutout, RenderPassShader vertexShader, RenderPassShader fragmentShader) {
         this.layer = layer;
         this.translucent = translucent;
+        this.cutout = cutout;
         this.vertexShader = vertexShader;
         this.fragmentShader = fragmentShader;
     }
 
     public boolean isTranslucent() {
         return this.translucent;
+    }
+
+    public boolean isCutout() {
+        return this.cutout;
     }
 
     public boolean isSolid() {

@@ -66,11 +66,11 @@ public class BlockRenderPassManager {
      * behavior of vanilla.
      */
     public static BlockRenderPassManager create() {
-        BlockRenderPass cutoutMipped = createRenderPass(new Identifier("sodium", "passes/block_cutout_mipped.json"));
-        BlockRenderPass cutout = createRenderPass(new Identifier("sodium", "passes/block_cutout.json"));
-        BlockRenderPass solid = createRenderPass(new Identifier("sodium", "passes/block_solid.json"));
-        BlockRenderPass translucent = createRenderPass(new Identifier("sodium", "passes/block_translucent.json"));
-        BlockRenderPass tripwire = createRenderPass(new Identifier("sodium", "passes/block_tripwire.json"));
+        BlockRenderPass cutoutMipped = createRenderPass(new Identifier("sodium", "passes/block_cutout_mipped.json"), true);
+        BlockRenderPass cutout = createRenderPass(new Identifier("sodium", "passes/block_cutout.json"), true);
+        BlockRenderPass solid = createRenderPass(new Identifier("sodium", "passes/block_solid.json"), false);
+        BlockRenderPass translucent = createRenderPass(new Identifier("sodium", "passes/block_translucent.json"), false);
+        BlockRenderPass tripwire = createRenderPass(new Identifier("sodium", "passes/block_tripwire.json"), false);
 
         Map<Block, BlockRenderPass> blocks = new Reference2ObjectOpenHashMap<>();
         Map<Fluid, BlockRenderPass> fluids = new Reference2ObjectOpenHashMap<>();
@@ -130,7 +130,7 @@ public class BlockRenderPassManager {
 
     private static final Gson GSON = new Gson();
 
-    private static BlockRenderPass createRenderPass(Identifier id) {
+    private static BlockRenderPass createRenderPass(Identifier id, boolean cutout) {
         RenderPassJson json;
 
         try (InputStream in = ResourceLoader.EMBEDDED.open(id)) {
@@ -139,7 +139,7 @@ public class BlockRenderPassManager {
             throw new RuntimeException("Failed to read render pass specification", e);
         }
 
-        return new BlockRenderPass(getLayerByName(json.getLayer()), json.isTranslucent(),
+        return new BlockRenderPass(getLayerByName(json.getLayer()), json.isTranslucent(), cutout,
                 createShaderInfo(json.getShader("vertex")),
                 createShaderInfo(json.getShader("fragment")));
     }

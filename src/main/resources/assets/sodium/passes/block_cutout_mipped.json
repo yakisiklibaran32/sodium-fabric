@@ -8,7 +8,7 @@
     "fragment": {
       "source": "sodium:shaders/block_layer_generic.fsh",
       "constants": {
-        "ALPHA_CUTOFF": "0.5"
+        "ALPHA_CUTOFF": "0.1"
       }
     }
   }
