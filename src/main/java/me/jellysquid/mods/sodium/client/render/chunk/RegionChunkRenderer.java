@@ -24,12 +24,9 @@ import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderBindingPo
 import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Matrix4f;
-import org.lwjgl.opengl.GL20C;
-import org.lwjgl.opengl.GL32C;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
 import java.util.List;
 import java.util.Map;
 
@@ -121,10 +118,8 @@ public class RegionChunkRenderer extends ShaderChunkRenderer {
         super.end();
     }
 
-    // TODO: move into CommandList
     private void bindDrawParameters() {
-        GL32C.glBindBufferBase(GL32C.GL_UNIFORM_BUFFER, 0, this.chunkInfoBuffer.handle());
-        GL32C.glUniformBlockBinding(this.activeProgram.handle(), this.activeProgram.uboDrawParametersIndex, 0);
+        this.activeProgram.uniformBlockDrawParameters.bindBuffer(this.chunkInfoBuffer);
     }
 
     private boolean buildDrawBatches(List<RenderSection> sections, BlockRenderPass pass, ChunkCameraContext camera) {
@@ -211,14 +206,7 @@ public class RegionChunkRenderer extends ShaderChunkRenderer {
     }
 
     private void setupCameraMatrices() {
-        Matrix4f projectionMatrix = RenderSystem.getProjectionMatrix();
-
-        try (MemoryStack memoryStack = MemoryStack.stackPush()) {
-            FloatBuffer buf = memoryStack.mallocFloat(16);
-            projectionMatrix.writeColumnMajor(buf);
-
-            GL20C.glUniformMatrix4fv(this.activeProgram.uProjectionMatrix, false, buf);
-        }
+        this.activeProgram.uniformProjectionMatrix.set(RenderSystem.getProjectionMatrix());
     }
 
     private void setupModelMatrices(MatrixStack matrixStack, RenderRegion region, ChunkCameraContext camera) {
@@ -227,27 +215,18 @@ public class RegionChunkRenderer extends ShaderChunkRenderer {
         float z = getCameraTranslation(region.getOriginZ(), camera.blockZ, camera.deltaZ);
 
         Matrix4f modelViewMatrix = matrixStack.peek().getModel().copy();
-
+        modelViewMatrix.multiplyByTranslation(x, y, z);
         Matrix4f modelViewProjectionMatrix = RenderSystem.getProjectionMatrix().copy();
         modelViewProjectionMatrix.multiply(matrixStack.peek().getModel());
-
+        modelViewProjectionMatrix.multiplyByTranslation(x, y, z);
         Matrix4f normalMatrix = matrixStack.peek().getModel().copy();
+        normalMatrix.multiplyByTranslation(x, y, z);
         normalMatrix.invert();
         normalMatrix.transpose();
 
-        uploadModelMatrix(this.activeProgram.uModelViewMatrix, modelViewMatrix, x, y, z);
-        uploadModelMatrix(this.activeProgram.uNormalMatrix, normalMatrix, x, y, z);
-        uploadModelMatrix(this.activeProgram.uModelViewProjectionMatrix, modelViewProjectionMatrix, x, y, z);
-    }
-
-    private void uploadModelMatrix(int location, Matrix4f matrix, float x, float y, float z) {
-        try (MemoryStack memoryStack = MemoryStack.stackPush()) {
-            FloatBuffer buf = memoryStack.mallocFloat(16);
-            matrix.multiplyByTranslation(x, y, z);
-            matrix.writeColumnMajor(buf);
-
-            GL20C.glUniformMatrix4fv(location, false, buf);
-        }
+     this.activeProgram.uniformNormalMatrix.set(normalMatrix) ;
+     this.activeProgram.uniformModelViewMatrix.set(modelViewMatrix) ;
+     this.activeProgram.uniformModelViewProjectionMatrix.set(modelViewProjectionMatrix) ;
     }
 
     private void addDrawCall(ElementRange part, long baseIndexPointer, int baseVertexIndex) {
