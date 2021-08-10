@@ -226,16 +226,27 @@ public class RegionChunkRenderer extends ShaderChunkRenderer {
         float y = getCameraTranslation(region.getOriginY(), camera.blockY, camera.deltaY);
         float z = getCameraTranslation(region.getOriginZ(), camera.blockZ, camera.deltaZ);
 
+        Matrix4f modelViewMatrix = matrixStack.peek().getModel().copy();
+
+        Matrix4f modelViewProjectionMatrix = RenderSystem.getProjectionMatrix().copy();
+        modelViewProjectionMatrix.multiply(matrixStack.peek().getModel());
+
+        Matrix4f normalMatrix = matrixStack.peek().getModel().copy();
+        normalMatrix.invert();
+        normalMatrix.transpose();
+
+        uploadModelMatrix(this.activeProgram.uModelViewMatrix, modelViewMatrix, x, y, z);
+        uploadModelMatrix(this.activeProgram.uNormalMatrix, normalMatrix, x, y, z);
+        uploadModelMatrix(this.activeProgram.uModelViewProjectionMatrix, modelViewProjectionMatrix, x, y, z);
+    }
+
+    private void uploadModelMatrix(int location, Matrix4f matrix, float x, float y, float z) {
         try (MemoryStack memoryStack = MemoryStack.stackPush()) {
             FloatBuffer buf = memoryStack.mallocFloat(16);
-
-            Matrix4f matrix = matrixStack.peek()
-                    .getModel()
-                    .copy();
             matrix.multiplyByTranslation(x, y, z);
             matrix.writeColumnMajor(buf);
 
-            GL20C.glUniformMatrix4fv(this.activeProgram.uModelViewMatrix, false, buf);
+            GL20C.glUniformMatrix4fv(location, false, buf);
         }
     }
 
