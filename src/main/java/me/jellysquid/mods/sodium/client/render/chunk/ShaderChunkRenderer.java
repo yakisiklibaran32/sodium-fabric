@@ -9,7 +9,7 @@ import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkMeshAttribute;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkFogMode;
-import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkProgram;
+import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderInterface;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderBindingPoints;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderOptions;
 import net.coderbot.iris.Iris;
@@ -27,15 +27,15 @@ import java.util.Map;
 import java.util.Optional;
 
 public abstract class ShaderChunkRenderer implements ChunkRenderer {
-    private final Map<BlockRenderPass, Map<ChunkShaderOptions, ChunkProgram>> gbufferPrograms = new Object2ObjectOpenHashMap<>();
-    private final Map<BlockRenderPass, Map<ChunkShaderOptions, ChunkProgram>> shadowPrograms = new Object2ObjectOpenHashMap<>();
+    private final Map<BlockRenderPass, Map<ChunkShaderOptions, GlProgram<ChunkShaderInterface>>> gbufferPrograms = new Object2ObjectOpenHashMap<>();
+    private final Map<BlockRenderPass, Map<ChunkShaderOptions, GlProgram<ChunkShaderInterface>>> shadowPrograms = new Object2ObjectOpenHashMap<>();
 
     protected final ChunkVertexType vertexType;
     protected final GlVertexFormat<ChunkMeshAttribute> vertexFormat;
 
     protected final RenderDevice device;
 
-    protected ChunkProgram activeProgram;
+    protected GlProgram<ChunkShaderInterface> activeProgram;
 
     public ShaderChunkRenderer(RenderDevice device, ChunkVertexType vertexType) {
         this.device = device;
@@ -44,8 +44,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
     }
 
     // TODO: Generalize shader options
-    protected ChunkProgram compileProgram(boolean isShadowPass, BlockRenderPass pass, ChunkShaderOptions options,
-                                          SodiumTerrainPipeline pipeline) {
+    protected GlProgram<ChunkShaderInterface> compileProgram(BlockRenderPass pass, ChunkShaderOptions options, SodiumTerrainPipeline pipeline) {
         Map<BlockRenderPass, Map<ChunkShaderOptions, ChunkProgram>> programMap =
                 isShadowPass ? shadowPrograms : gbufferPrograms;
 
@@ -55,10 +54,10 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
             programMap.put(pass, programs = new Object2ObjectOpenHashMap<>());
         }
 
-        ChunkProgram program = programs.get(options);
+        GlProgram<ChunkShaderInterface> program = programs.get(options);
 
         if (program == null) {
-            programs.put(options, program = this.createShader(this.device, isShadowPass, pass, options, pipeline));
+            programs.put(options, program = this.createShader(isShadowPass, pass, options, pipeline));
         }
 
         return program;
@@ -74,7 +73,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         };
     }
 
-    private GlShader createVertexShader(RenderDevice device, boolean isShadowPass, BlockRenderPass pass,
+    private GlProgram<ChunkShaderInterface> createVertexShader(RenderDevice device, boolean isShadowPass, BlockRenderPass pass,
                                         SodiumTerrainPipeline pipeline, ShaderConstants constants) {
         if (pipeline != null) {
             Optional<String> irisVertexShader;
@@ -185,7 +184,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
                     .bindAttribute("a_Normal", ChunkShaderBindingPoints.NORMAL)
                     .bindFragmentData("fragColor", ChunkShaderBindingPoints.FRAG_COLOR)
                     .bindFragmentData("iris_FragData", ChunkShaderBindingPoints.FRAG_COLOR)
-                    .build((handle) -> {
+                    .link((shader) -> {
                         ProgramUniforms uniforms = null;
                         ProgramSamplers samplers = null;
 
@@ -199,7 +198,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
                             }
                         }
 
-                        return new ChunkProgram(device, handle, options, uniforms, samplers);
+                        return new ChunkShaderInterface(shader, options, uniforms, samplers);
                     });
         } finally {
             vertShader.delete();
@@ -229,7 +228,8 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
 
         this.activeProgram = this.compileProgram(isShadowPass, pass, options, sodiumTerrainPipeline);
         this.activeProgram.bind();
-        this.activeProgram.setup(this.vertexType);
+        this.activeProgram.getInterface()
+                .setup(this.vertexType);
 
         if (isShadowPass) {
             // No back face culling during the shadow pass
