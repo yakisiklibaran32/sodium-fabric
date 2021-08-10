@@ -25,18 +25,16 @@ public class ChunkProgram extends GlProgram {
     private final int uTextureScale;
     private final int uBlockTex;
     private final int uLightTex;
-    private final int uModelViewMatrix;
-    private final int uProjectionMatrix;
-    private final int uNormalMatrix;
+    public final int uModelViewMatrix;
+    public final int uProjectionMatrix;
+    public final int uModelViewProjectionMatrix;
+    public final int uNormalMatrix;
 
     @Nullable
     private final ProgramUniforms irisProgramUniforms;
 
     @Nullable
     private final ProgramSamplers irisProgramSamplers;
-
-    public final int uModelViewMatrix;
-    public final int uProjectionMatrix;
 
     public final int uboDrawParametersIndex;
 
@@ -49,6 +47,7 @@ public class ChunkProgram extends GlProgram {
 
         this.uModelViewMatrix = this.getUniformLocation("u_ModelViewMatrix");
         this.uProjectionMatrix = this.getUniformLocation("u_ProjectionMatrix");
+        this.uModelViewProjectionMatrix = this.getUniformLocation("u_ModelViewProjectionMatrix");
 
         this.uBlockTex = this.getUniformLocation("u_BlockTex");
         this.uLightTex = this.getUniformLocation("u_LightTex");
@@ -60,8 +59,6 @@ public class ChunkProgram extends GlProgram {
 
         this.fogShader = options.fog().getFactory().apply(this);
 
-        this.uModelViewMatrix = this.getUniformLocation("u_ModelViewMatrix");
-        this.uProjectionMatrix = this.getUniformLocation("u_ProjectionMatrix");
         this.uNormalMatrix = this.getUniformLocation("u_NormalMatrix");
         this.irisProgramUniforms = irisProgramUniforms;
         this.irisProgramSamplers = irisProgramSamplers;
@@ -90,21 +87,6 @@ public class ChunkProgram extends GlProgram {
         if (irisProgramSamplers != null) {
             irisProgramSamplers.update();
         }
-
-        Matrix4f modelViewMatrix = matrixStack.peek().getModel();
-        Matrix4f normalMatrix = matrixStack.peek().getModel().copy();
-        normalMatrix.invert();
-        normalMatrix.transpose();
-
-        uniformMatrix(this.uModelViewMatrix, modelViewMatrix);
-        uniformMatrix(this.uProjectionMatrix, RenderSystem.getProjectionMatrix());
-        uniformMatrix(this.uNormalMatrix, normalMatrix);
-
-        Matrix4f matrix = RenderSystem.getProjectionMatrix().copy();
-
-        matrix.multiply(matrixStack.peek().getModel());
-
-        uniformMatrix(this.uModelViewProjectionMatrix, matrix);
     }
 
     @Override
@@ -114,20 +96,6 @@ public class ChunkProgram extends GlProgram {
         } catch (NullPointerException e) {
             System.err.println(e.getMessage());
             return -1;
-        }
-    }
-
-    private static void uniformMatrix(int location, Matrix4f matrix) {
-        if (location == -1) {
-            return;
-        }
-
-        try (MemoryStack memoryStack = MemoryStack.stackPush()) {
-            FloatBuffer buffer = memoryStack.mallocFloat(16);
-
-            matrix.writeColumnMajor(buffer);
-
-            GL20C.glUniformMatrix4fv(location, false, buffer);
         }
     }
 }
