@@ -1,6 +1,5 @@
 package me.jellysquid.mods.sodium.client.render.chunk.passes;
 
-import me.jellysquid.mods.sodium.client.gl.shader.ShaderConstants;
 import net.minecraft.client.render.RenderLayer;
 
 public class BlockRenderPass {

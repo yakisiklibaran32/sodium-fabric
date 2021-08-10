@@ -28,7 +28,14 @@ void main() {
     vec4 sampleLightTex = texture(u_LightTex, v_LightCoord);
 
     vec4 diffuseColor = (sampleBlockTex * sampleLightTex);
-    diffuseColor *= v_Color;
+
+#ifdef COLOR_MULTIPLIER
+    diffuseColor.rgb *= COLOR_MULTIPLIER;
+#else
+    diffuseColor.rgb *= v_Color.rgb;
+#endif
+
+    diffuseColor.rgb *= v_Color.a;
 
     fragColor = _linearFog(diffuseColor, v_FragDistance, u_FogColor, u_FogStart, u_FogEnd);
 }

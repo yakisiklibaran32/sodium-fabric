@@ -2,8 +2,10 @@ package me.jellysquid.mods.sodium.client.render.chunk.passes;
 
 import com.google.gson.Gson;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
+import me.jellysquid.mods.sodium.client.SodiumClientMod;
 import me.jellysquid.mods.sodium.client.gl.shader.ShaderConstants;
 import me.jellysquid.mods.sodium.client.resource.ResourceLoader;
+import me.jellysquid.mods.sodium.client.resource.shader.json.BlockMapJson;
 import me.jellysquid.mods.sodium.client.resource.shader.json.RenderPassJson;
 import me.jellysquid.mods.sodium.client.resource.shader.json.ShaderJson;
 import net.minecraft.block.Block;
@@ -11,10 +13,13 @@ import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderLayers;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -66,11 +71,13 @@ public class BlockRenderPassManager {
      * behavior of vanilla.
      */
     public static BlockRenderPassManager create() {
-        BlockRenderPass cutoutMipped = createRenderPass(new Identifier("sodium", "passes/block_cutout_mipped.json"), true);
-        BlockRenderPass cutout = createRenderPass(new Identifier("sodium", "passes/block_cutout.json"), true);
-        BlockRenderPass solid = createRenderPass(new Identifier("sodium", "passes/block_solid.json"), false);
-        BlockRenderPass translucent = createRenderPass(new Identifier("sodium", "passes/block_translucent.json"), false);
-        BlockRenderPass tripwire = createRenderPass(new Identifier("sodium", "passes/block_tripwire.json"), false);
+        RenderPassCache cache = new RenderPassCache();
+
+        BlockRenderPass cutoutMipped = cache.get(new Identifier("sodium", "block_cutout_mipped"));
+        BlockRenderPass cutout = cache.get(new Identifier("sodium", "block_cutout"));
+        BlockRenderPass solid = cache.get(new Identifier("sodium", "block_solid"));
+        BlockRenderPass translucent = cache.get(new Identifier("sodium", "block_translucent"));
+        BlockRenderPass tripwire = cache.get(new Identifier("sodium", "block_tripwire"));
 
         Map<Block, BlockRenderPass> blocks = new Reference2ObjectOpenHashMap<>();
         Map<Fluid, BlockRenderPass> fluids = new Reference2ObjectOpenHashMap<>();
@@ -96,6 +103,8 @@ public class BlockRenderPassManager {
             blocks.put(block, pass);
         }
 
+        tryLoadMappings(new Identifier("sodium", "maps/block_map.json"), cache, blocks, fluids);
+
         for (Map.Entry<Fluid, RenderLayer> entry : RenderLayers.FLUIDS.entrySet()) {
             Fluid fluid = entry.getKey();
             RenderLayer layer = entry.getValue();
@@ -116,33 +125,50 @@ public class BlockRenderPassManager {
         return new BlockRenderPassManager(blocks, fluids, solid);
     }
 
+    private static void tryLoadMappings(Identifier id, RenderPassCache cache, Map<Block, BlockRenderPass> blocks, Map<Fluid, BlockRenderPass> fluids) {
+        BlockMapJson json = tryLoadBlockMapJson(id);
+
+        if (json == null) {
+            return;
+        }
+
+        for (Map.Entry<String, String> entry : json.getBlockRedefinitions()) {
+            Optional<Block> block = Registry.BLOCK.getOrEmpty(new Identifier(entry.getKey()));
+
+            if (block.isEmpty()) {
+                SodiumClientMod.logger().warn("Couldn't find block with name {}", entry.getKey());
+                continue;
+            }
+
+            blocks.put(block.get(), cache.get(new Identifier(entry.getValue())));
+        }
+    }
+
+    private static BlockMapJson tryLoadBlockMapJson(Identifier id) {
+        try (InputStream in = ResourceLoader.EMBEDDED.open(id)) {
+            if (in == null) {
+                return null;
+            }
+
+            return GSON.fromJson(new InputStreamReader(in), BlockMapJson.class);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read block map json", e);
+        }
+    }
+
     public Iterable<BlockRenderPass> getRenderPasses() {
         return this.totalPasses;
     }
 
-    public List<BlockRenderPass> getSolidRenderPasses() {
-        return this.totalPasses.stream().filter(BlockRenderPass::isSolid).toList();
+    public Iterable<BlockRenderPass> getSolidRenderPasses() {
+        return () -> this.totalPasses.stream().filter(BlockRenderPass::isSolid).iterator();
     }
 
-    public List<BlockRenderPass> getTranslucentRenderPasses() {
-        return this.totalPasses.stream().filter(BlockRenderPass::isTranslucent).toList();
+    public Iterable<BlockRenderPass> getTranslucentRenderPasses() {
+        return () -> this.totalPasses.stream().filter(BlockRenderPass::isTranslucent).iterator();
     }
 
     private static final Gson GSON = new Gson();
-
-    private static BlockRenderPass createRenderPass(Identifier id, boolean cutout) {
-        RenderPassJson json;
-
-        try (InputStream in = ResourceLoader.EMBEDDED.open(id)) {
-            json = GSON.fromJson(new InputStreamReader(in), RenderPassJson.class);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to read render pass specification", e);
-        }
-
-        return new BlockRenderPass(getLayerByName(json.getLayer()), json.isTranslucent(), cutout,
-                createShaderInfo(json.getShader("vertex")),
-                createShaderInfo(json.getShader("fragment")));
-    }
 
     private static RenderPassShader createShaderInfo(ShaderJson json) {
         ShaderConstants.Builder constants = ShaderConstants.builder();
@@ -165,5 +191,28 @@ public class BlockRenderPassManager {
             case "minecraft:tripwire" -> RenderLayer.getTripwire();
             default -> throw new IllegalArgumentException("Unknown layer name: " + name);
         };
+    }
+
+    private static class RenderPassCache {
+        private final Map<Identifier, BlockRenderPass> cache = new Reference2ObjectOpenHashMap<>();
+
+        public BlockRenderPass get(Identifier id) {
+            return this.cache.computeIfAbsent(id, RenderPassCache::load);
+        }
+
+        private static BlockRenderPass load(Identifier name) {
+            RenderPassJson json;
+            Identifier path = new Identifier(name.getNamespace(), FilenameUtils.concat("shaders/pass", name.getPath() + ".json"));
+
+            try (InputStream in = ResourceLoader.EMBEDDED.open(path)) {
+                json = GSON.fromJson(new InputStreamReader(in), RenderPassJson.class);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to read render pass specification", e);
+            }
+
+            return new BlockRenderPass(getLayerByName(json.getLayer()), json.isTranslucent(),
+                    createShaderInfo(json.getShader("vertex")),
+                    createShaderInfo(json.getShader("fragment")));
+        }
     }
 }

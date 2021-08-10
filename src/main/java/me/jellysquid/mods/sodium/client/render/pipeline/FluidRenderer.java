@@ -394,7 +394,7 @@ public class FluidRenderer {
                 color &= 0x00FFFFFF;
                 color |= ((int) (ao * 255.0f)) << 24;
             } else {
-                color = ColorABGR.mul(color, ao);
+                color = ColorABGR.withAlpha(color, ao);
             }
 
             this.quadColors[i] = color;

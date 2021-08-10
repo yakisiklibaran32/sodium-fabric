@@ -9,11 +9,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public class ShaderParser {
     public static String parseShader(String src, ShaderConstants constants) {
         List<String> lines = parseShader(src);
-        lines.addAll(1, constants.getDefineStrings());
+        lines.addAll(1, constants.createDefines());
 
         return String.join("\n", lines);
     }

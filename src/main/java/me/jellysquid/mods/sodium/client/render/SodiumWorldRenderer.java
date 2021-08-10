@@ -215,7 +215,7 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
 
 
     public void drawChunkLayerWrapper(RenderLayer renderLayer, MatrixStack matrices, double x, double y, double z) {
-        List<BlockRenderPass> passes = Collections.emptyList();
+        Iterable<BlockRenderPass> passes = Collections.emptyList();
 
         if (renderLayer == RenderLayer.getSolid()) {
             passes = this.renderPassManager.getSolidRenderPasses();
