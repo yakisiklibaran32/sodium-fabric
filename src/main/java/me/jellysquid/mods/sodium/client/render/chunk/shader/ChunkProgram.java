@@ -35,7 +35,9 @@ public class ChunkProgram extends GlProgram {
     @Nullable
     private final ProgramSamplers irisProgramSamplers;
 
-    public final int uModelViewProjectionMatrix;
+    public final int uModelViewMatrix;
+    public final int uProjectionMatrix;
+
     public final int uboDrawParametersIndex;
 
     // The fog shader component used by this program in order to setup the appropriate GL state
@@ -45,7 +47,8 @@ public class ChunkProgram extends GlProgram {
                            @Nullable ProgramUniforms irisProgramUniforms, @Nullable ProgramSamplers irisProgramSamplers) {
         super(handle);
 
-        this.uModelViewProjectionMatrix = this.getUniformLocation("u_ModelViewProjectionMatrix");
+        this.uModelViewMatrix = this.getUniformLocation("u_ModelViewMatrix");
+        this.uProjectionMatrix = this.getUniformLocation("u_ProjectionMatrix");
 
         this.uBlockTex = this.getUniformLocation("u_BlockTex");
         this.uLightTex = this.getUniformLocation("u_LightTex");
