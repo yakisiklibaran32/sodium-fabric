@@ -9,4 +9,6 @@ public interface ShaderBindingContext {
     <U extends GlUniform<?>> U bindUniform(String name, IntFunction<U> factory);
 
     GlUniformBlock bindUniformBlock(String name, int bindingPoint);
+
+    int handle();
 }

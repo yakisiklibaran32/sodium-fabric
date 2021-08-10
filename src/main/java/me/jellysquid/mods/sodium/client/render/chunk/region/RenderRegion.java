@@ -146,7 +146,7 @@ public class RenderRegion {
             int expectedVertexCount = REGION_SIZE * 756;
             int expectedIndexCount = (expectedVertexCount / 4) * 6;
 
-            this.vertexBuffers = createArena(commandList, expectedVertexCount * ChunkModelVertexFormats.DEFAULT.getBufferVertexFormat().getStride(), stagingBuffer);
+            this.vertexBuffers = createArena(commandList, expectedVertexCount * ChunkModelVertexFormats.EXTENDED.getBufferVertexFormat().getStride(), stagingBuffer);
             this.indexBuffers = createArena(commandList, expectedIndexCount * 4, stagingBuffer);
         }
 

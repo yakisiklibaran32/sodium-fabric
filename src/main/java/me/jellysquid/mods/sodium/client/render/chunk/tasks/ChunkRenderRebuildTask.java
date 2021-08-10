@@ -103,7 +103,7 @@ public class ChunkRenderRebuildTask extends ChunkRenderBuildTask {
                         // All fluids have a ShadersMod render type of 1, to match behavior of Minecraft 1.7 and earlier.
                         buffers.setMaterialId(fluidState.getBlockState(), (short) 1);
 
-                        if (cache.getFluidRenderer().render(slice, fluidState, blockPos, offset, buffers.get(layer))) {
+                        if (cache.getFluidRenderer().render(slice, fluidState, blockPos, offset, buffers.getModelBuilder(fluidState))) {
                             rendered = true;
                         }
 

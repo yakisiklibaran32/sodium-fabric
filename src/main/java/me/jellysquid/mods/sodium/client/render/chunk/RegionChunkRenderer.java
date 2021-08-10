@@ -209,12 +209,19 @@ public class RegionChunkRenderer extends ShaderChunkRenderer {
         float y = getCameraTranslation(region.getOriginY(), camera.blockY, camera.deltaY);
         float z = getCameraTranslation(region.getOriginZ(), camera.blockZ, camera.deltaZ);
 
-        Matrix4f matrix = matrixStack.peek()
-                .getModel()
-                .copy();
-        matrix.multiplyByTranslation(x, y, z);
+        Matrix4f modelViewMatrix = matrixStack.peek().getModel().copy();
+        modelViewMatrix.multiplyByTranslation(x, y, z);
+        Matrix4f modelViewProjectionMatrix = RenderSystem.getProjectionMatrix().copy();
+        modelViewProjectionMatrix.multiply(matrixStack.peek().getModel());
+        modelViewProjectionMatrix.multiplyByTranslation(x, y, z);
+        Matrix4f normalMatrix = matrixStack.peek().getModel().copy();
+        normalMatrix.multiplyByTranslation(x, y, z);
+        normalMatrix.invert();
+        normalMatrix.transpose();
 
-        shader.setModelViewMatrix(matrix);
+        shader.setModelViewMatrix(modelViewMatrix);
+        shader.setModelViewProjectionMatrix(modelViewProjectionMatrix);
+        shader.setNormalMatrix(normalMatrix);
     }
 
     private void addDrawCall(ElementRange part, long baseIndexPointer, int baseVertexIndex) {
