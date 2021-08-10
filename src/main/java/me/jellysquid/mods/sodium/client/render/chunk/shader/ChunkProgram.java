@@ -43,12 +43,7 @@ public class ChunkProgram extends GlProgram {
 
     @Nullable
     private final ProgramSamplers irisProgramSamplers;
-
-    public final GlUniformMatrix4f uniformModelViewMatrix;
     public final GlUniformMatrix4f uniformNormalMatrix;
-    public final GlUniformMatrix4f uniformProjectionMatrix;
-
-    public final GlUniformBlock uniformBlockDrawParameters;
 
     // The fog shader component used by this program in order to setup the appropriate GL state
     private final ChunkShaderFogComponent fogShader;
@@ -59,7 +54,7 @@ public class ChunkProgram extends GlProgram {
 
         this.uniformModelViewMatrix = this.bindUniform("u_ModelViewMatrix", GlUniformMatrix4f::new);
         this.uniformProjectionMatrix = this.bindUniform("u_ProjectionMatrix", GlUniformMatrix4f::new);
-        this.uniformModelViewProjectionMatrix = this.bindUniform("u_ProjectionMatrix", GlUniformMatrix4f::new);
+        this.uniformModelViewProjectionMatrix = this.bindUniform("u_ModelViewProjectionMatrix", GlUniformMatrix4f::new);
 
         this.uniformBlockTex = this.bindUniform("u_BlockTex", GlUniformInt::new);
         this.uniformLightTex = this.bindUniform("u_LightTex", GlUniformInt::new);
@@ -99,16 +94,6 @@ public class ChunkProgram extends GlProgram {
 
         if (irisProgramSamplers != null) {
             irisProgramSamplers.update();
-        }
-    }
-
-    @Override
-    public int getUniformLocation(String name) {
-        try {
-            return super.getUniformLocation(name);
-        } catch (NullPointerException e) {
-            System.err.println(e.getMessage());
-            return -1;
         }
     }
 }

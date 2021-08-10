@@ -1,6 +1,7 @@
 package me.jellysquid.mods.sodium.client.gl.shader;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import me.jellysquid.mods.sodium.client.SodiumClientMod;
 import me.jellysquid.mods.sodium.client.gl.GlObject;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniform;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformBlock;
@@ -39,7 +40,7 @@ public abstract class GlProgram extends GlObject {
         int index = GL20C.glGetUniformLocation(this.handle(), name);
 
         if (index < 0) {
-            throw new NullPointerException("No uniform exists with name: " + name);
+            SodiumClientMod.logger().warn("No uniform exists with name: " + name);
         }
 
         return factory.apply(index);
