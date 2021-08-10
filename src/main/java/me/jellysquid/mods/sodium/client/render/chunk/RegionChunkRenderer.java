@@ -22,6 +22,7 @@ import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 import me.jellysquid.mods.sodium.client.render.chunk.region.RenderRegion;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderBindingPoints;
 import net.coderbot.iris.shadows.ShadowRenderingState;
+import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderInterface;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Matrix4f;
 import org.lwjgl.system.MemoryStack;
@@ -98,8 +99,10 @@ public class RegionChunkRenderer extends ShaderChunkRenderer {
                        ChunkCameraContext camera) {
         super.begin(pass);
 
-        this.bindDrawParameters();
-        this.setupCameraMatrices();
+        ChunkShaderInterface shader = this.activeProgram.getInterface();
+
+        shader.setProjectionMatrix(RenderSystem.getProjectionMatrix());
+        shader.setDrawUniforms(this.chunkInfoBuffer);
 
         for (Map.Entry<RenderRegion, List<RenderSection>> entry : sortedRegions(list, pass.isTranslucent())) {
             RenderRegion region = entry.getKey();
@@ -109,17 +112,13 @@ public class RegionChunkRenderer extends ShaderChunkRenderer {
                 continue;
             }
 
-            this.setupModelMatrices(matrixStack, region, camera);
+            this.setModelMatrixUniforms(shader, matrixStack, region, camera);
 
             GlTessellation tessellation = createTessellationForRegion(commandList, region.getArenas(pass));
             executeDrawBatches(commandList, tessellation);
         }
 
         super.end();
-    }
-
-    private void bindDrawParameters() {
-        this.activeProgram.uniformBlockDrawParameters.bindBuffer(this.chunkInfoBuffer);
     }
 
     private boolean buildDrawBatches(List<RenderSection> sections, BlockRenderPass pass, ChunkCameraContext camera) {
@@ -205,11 +204,7 @@ public class RegionChunkRenderer extends ShaderChunkRenderer {
         }
     }
 
-    private void setupCameraMatrices() {
-        this.activeProgram.uniformProjectionMatrix.set(RenderSystem.getProjectionMatrix());
-    }
-
-    private void setupModelMatrices(MatrixStack matrixStack, RenderRegion region, ChunkCameraContext camera) {
+    private void setModelMatrixUniforms(ChunkShaderInterface shader, MatrixStack matrixStack, RenderRegion region, ChunkCameraContext camera) {
         float x = getCameraTranslation(region.getOriginX(), camera.blockX, camera.deltaX);
         float y = getCameraTranslation(region.getOriginY(), camera.blockY, camera.deltaY);
         float z = getCameraTranslation(region.getOriginZ(), camera.blockZ, camera.deltaZ);
@@ -219,7 +214,7 @@ public class RegionChunkRenderer extends ShaderChunkRenderer {
                 .copy();
         matrix.multiplyByTranslation(x, y, z);
 
-        this.activeProgram.uniformModelViewMatrix.set(matrix);
+        shader.setModelViewMatrix(matrix);
     }
 
     private void addDrawCall(ElementRange part, long baseIndexPointer, int baseVertexIndex) {
