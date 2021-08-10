@@ -1,6 +1,7 @@
 package me.jellysquid.mods.sodium.client.render.chunk;
 
 import com.google.common.collect.Lists;
+import com.mojang.blaze3d.systems.RenderSystem;
 import me.jellysquid.mods.sodium.client.gl.attribute.GlVertexAttributeBinding;
 import me.jellysquid.mods.sodium.client.gl.buffer.GlBufferUsage;
 import me.jellysquid.mods.sodium.client.gl.buffer.GlMutableBuffer;
@@ -21,13 +22,12 @@ import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 import me.jellysquid.mods.sodium.client.render.chunk.region.RenderRegion;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderBindingPoints;
 import net.coderbot.iris.shadows.ShadowRenderingState;
+import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderInterface;
 import net.minecraft.client.util.math.MatrixStack;
-import org.lwjgl.opengl.GL20C;
-import org.lwjgl.opengl.GL32C;
+import net.minecraft.util.math.Matrix4f;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
 import java.util.List;
 import java.util.Map;
 
@@ -97,9 +97,12 @@ public class RegionChunkRenderer extends ShaderChunkRenderer {
     public void render(MatrixStack matrixStack, CommandList commandList,
                        ChunkRenderList list, BlockRenderPass pass,
                        ChunkCameraContext camera) {
-        super.begin(pass, matrixStack);
+        super.begin(pass);
 
-        this.bindDrawParameters();
+        ChunkShaderInterface shader = this.activeProgram.getInterface();
+
+        shader.setProjectionMatrix(RenderSystem.getProjectionMatrix());
+        shader.setDrawUniforms(this.chunkInfoBuffer);
 
         for (Map.Entry<RenderRegion, List<RenderSection>> entry : sortedRegions(list, pass.isTranslucent())) {
             RenderRegion region = entry.getKey();
@@ -109,19 +112,13 @@ public class RegionChunkRenderer extends ShaderChunkRenderer {
                 continue;
             }
 
-            pushCameraTranslation(region, camera);
+            this.setModelMatrixUniforms(shader, matrixStack, region, camera);
 
-            GlTessellation tessellation = createTessellationForRegion(commandList, region.getArenas(pass));
+            GlTessellation tessellation = this.createTessellationForRegion(commandList, region.getArenas(), pass);
             executeDrawBatches(commandList, tessellation);
         }
 
         super.end();
-    }
-
-    // TODO: move into CommandList
-    private void bindDrawParameters() {
-        GL32C.glBindBufferBase(GL32C.GL_UNIFORM_BUFFER, 0, this.chunkInfoBuffer.handle());
-        GL32C.glUniformBlockBinding(this.activeProgram.handle(), this.activeProgram.uboDrawParametersIndex, 0);
     }
 
     private boolean buildDrawBatches(List<RenderSection> sections, BlockRenderPass pass, ChunkCameraContext camera) {
@@ -141,8 +138,8 @@ public class RegionChunkRenderer extends ShaderChunkRenderer {
             long indexOffset = state.getIndexSegment()
                     .getOffset();
 
-            int baseVertex = (int) state.getVertexSegment()
-                    .getOffset();
+            int baseVertex = state.getVertexSegment()
+                    .getOffset() / this.vertexFormat.getStride();
 
             this.addDrawCall(state.getModelPart(ModelQuadFacing.UNASSIGNED), indexOffset, baseVertex);
 
@@ -187,11 +184,11 @@ public class RegionChunkRenderer extends ShaderChunkRenderer {
         return nonEmpty;
     }
 
-    private GlTessellation createTessellationForRegion(CommandList commandList, RenderRegion.RenderRegionArenas arenas) {
-        GlTessellation tessellation = arenas.getTessellation();
+    private GlTessellation createTessellationForRegion(CommandList commandList, RenderRegion.RenderRegionArenas arenas, BlockRenderPass pass) {
+        GlTessellation tessellation = arenas.getTessellation(pass);
 
         if (tessellation == null) {
-            arenas.setTessellation(tessellation = this.createRegionTessellation(commandList, arenas));
+            arenas.setTessellation(pass, tessellation = this.createRegionTessellation(commandList, arenas));
         }
 
         return tessellation;
@@ -207,15 +204,17 @@ public class RegionChunkRenderer extends ShaderChunkRenderer {
         }
     }
 
-    private void pushCameraTranslation(RenderRegion region, ChunkCameraContext camera) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            FloatBuffer fb = stack.mallocFloat(3);
-            fb.put(0, getCameraTranslation(region.getOriginX(), camera.blockX, camera.deltaX));
-            fb.put(1, getCameraTranslation(region.getOriginY(), camera.blockY, camera.deltaY));
-            fb.put(2, getCameraTranslation(region.getOriginZ(), camera.blockZ, camera.deltaZ));
+    private void setModelMatrixUniforms(ChunkShaderInterface shader, MatrixStack matrixStack, RenderRegion region, ChunkCameraContext camera) {
+        float x = getCameraTranslation(region.getOriginX(), camera.blockX, camera.deltaX);
+        float y = getCameraTranslation(region.getOriginY(), camera.blockY, camera.deltaY);
+        float z = getCameraTranslation(region.getOriginZ(), camera.blockZ, camera.deltaZ);
 
-            GL20C.glUniform3fv(this.activeProgram.uCameraTranslation, fb);
-        }
+        Matrix4f matrix = matrixStack.peek()
+                .getModel()
+                .copy();
+        matrix.multiplyByTranslation(x, y, z);
+
+        shader.setModelViewMatrix(matrix);
     }
 
     private void addDrawCall(ElementRange part, long baseIndexPointer, int baseVertexIndex) {
@@ -227,8 +226,9 @@ public class RegionChunkRenderer extends ShaderChunkRenderer {
 
     private GlTessellation createRegionTessellation(CommandList commandList, RenderRegion.RenderRegionArenas arenas) {
         return commandList.createTessellation(GlPrimitiveType.TRIANGLES, new TessellationBinding[] {
-                new TessellationBinding(arenas.vertexBuffers.getBufferObject(), this.vertexAttributeBindings)
-        }, arenas.indexBuffers.getBufferObject());
+                TessellationBinding.forVertexBuffer(arenas.vertexBuffers.getBufferObject(), this.vertexAttributeBindings),
+                TessellationBinding.forElementBuffer(arenas.indexBuffers.getBufferObject())
+        });
     }
 
     @Override

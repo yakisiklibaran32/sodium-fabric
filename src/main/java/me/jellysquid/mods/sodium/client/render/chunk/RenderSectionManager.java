@@ -15,6 +15,7 @@ import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildResult;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuilder;
 import me.jellysquid.mods.sodium.client.render.chunk.data.ChunkRenderData;
+import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkModelVertexFormats;
 import me.jellysquid.mods.sodium.client.render.chunk.graph.ChunkGraphInfo;
 import me.jellysquid.mods.sodium.client.render.chunk.graph.ChunkGraphIterationQueue;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
@@ -70,7 +71,6 @@ public class RenderSectionManager implements ChunkStatusListener {
     private static final float FOG_PLANE_OFFSET = 12.0f;
 
     private final ChunkBuilder builder;
-    private final ChunkRenderer chunkRenderer;
 
     private final RenderRegionManager regions;
     private final ClonedChunkSectionCache sectionCache;
@@ -86,6 +86,8 @@ public class RenderSectionManager implements ChunkStatusListener {
 
     private ObjectList<RenderSection> tickableChunks = new ObjectArrayList<>();
     private ObjectList<BlockEntity> visibleBlockEntities = new ObjectArrayList<>();
+
+    private final RegionChunkRenderer chunkRenderer;
 
     private final SodiumWorldRenderer worldRenderer;
     private final ClientWorld world;
@@ -111,19 +113,20 @@ public class RenderSectionManager implements ChunkStatusListener {
     private ObjectList<BlockEntity> visibleBlockEntitiesSwap = new ObjectArrayList<>();
     private boolean needsUpdateSwap;
 
-    public RenderSectionManager(SodiumWorldRenderer worldRenderer, ChunkRenderer chunkRenderer, BlockRenderPassManager renderPassManager, ClientWorld world, int renderDistance) {
-        this.chunkRenderer = chunkRenderer;
+   public RenderSectionManager(SodiumWorldRenderer worldRenderer, BlockRenderPassManager renderPassManager, ClientWorld world, int renderDistance) {
+        this.chunkRenderer = new RegionChunkRenderer(RenderDevice.INSTANCE, ChunkModelVertexFormats.EXTENDED);
+
         this.worldRenderer = worldRenderer;
         this.world = world;
 
-        this.builder = new ChunkBuilder(chunkRenderer.getVertexType());
+        this.builder = new ChunkBuilder(ChunkModelVertexFormats.EXTENDED);
         this.builder.init(world, renderPassManager);
 
         this.needsUpdate = true;
         this.needsUpdateSwap = true;
         this.renderDistance = renderDistance;
 
-        this.regions = new RenderRegionManager(this.chunkRenderer);
+        this.regions = new RenderRegionManager();
         this.sectionCache = new ClonedChunkSectionCache(this.world);
 
         for (ChunkUpdateType type : ChunkUpdateType.values()) {
@@ -453,6 +456,7 @@ public class RenderSectionManager implements ChunkStatusListener {
             this.regions.delete(commandList);
         }
 
+        this.chunkRenderer.delete();
         this.builder.stopWorkers();
     }
 
