@@ -202,7 +202,7 @@ public class BlockRenderPassManager {
 
         private static BlockRenderPass load(Identifier name) {
             RenderPassJson json;
-            Identifier path = new Identifier(name.getNamespace(), FilenameUtils.concat("shaders/pass", name.getPath() + ".json"));
+            Identifier path = new Identifier(name.getNamespace(), "shaders/pass/" + name.getPath() + ".json");
 
             try (InputStream in = ResourceLoader.EMBEDDED.open(path)) {
                 json = GSON.fromJson(new InputStreamReader(in), RenderPassJson.class);
