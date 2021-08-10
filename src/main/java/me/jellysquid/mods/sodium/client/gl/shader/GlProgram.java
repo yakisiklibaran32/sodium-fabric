@@ -46,6 +46,10 @@ public class GlProgram<T> extends GlObject implements ShaderBindingContext {
         GL20C.glUseProgram(0);
     }
 
+    @Override
+    public int handler() {
+        return this.handle();
+    }
     public void delete() {
         GL20C.glDeleteProgram(this.handle());
 

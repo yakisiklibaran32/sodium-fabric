@@ -44,11 +44,11 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
     }
 
     // TODO: Generalize shader options
-    protected GlProgram<ChunkShaderInterface> compileProgram(BlockRenderPass pass, ChunkShaderOptions options, SodiumTerrainPipeline pipeline) {
-        Map<BlockRenderPass, Map<ChunkShaderOptions, ChunkProgram>> programMap =
+    protected GlProgram<ChunkShaderInterface> compileProgram(BlockRenderPass pass, boolean isShadowPass, ChunkShaderOptions options, SodiumTerrainPipeline pipeline) {
+        Map<BlockRenderPass, Map<ChunkShaderOptions, GlProgram<ChunkShaderInterface>>> programMap =
                 isShadowPass ? shadowPrograms : gbufferPrograms;
 
-        Map<ChunkShaderOptions, ChunkProgram> programs = programMap.get(pass);
+        Map<ChunkShaderOptions, GlProgram<ChunkShaderInterface>> programs = programMap.get(pass);
 
         if (programs == null) {
             programMap.put(pass, programs = new Object2ObjectOpenHashMap<>());
@@ -73,7 +73,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         };
     }
 
-    private GlProgram<ChunkShaderInterface> createVertexShader(RenderDevice device, boolean isShadowPass, BlockRenderPass pass,
+    private GlShader createVertexShader(RenderDevice device, boolean isShadowPass, BlockRenderPass pass,
                                         SodiumTerrainPipeline pipeline, ShaderConstants constants) {
         if (pipeline != null) {
             Optional<String> irisVertexShader;
@@ -161,7 +161,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
                 new Identifier("sodium", getShaderName(pass) + ".fsh"), constants);
     }
 
-    private ChunkProgram createShader(RenderDevice device, boolean isShadowPass, BlockRenderPass pass,
+    private GlProgram<ChunkShaderInterface> createShader(boolean isShadowPass, BlockRenderPass pass,
                                       ChunkShaderOptions options, SodiumTerrainPipeline pipeline) {
         ShaderConstants constants = options.constants();
 
@@ -189,12 +189,12 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
                         ProgramSamplers samplers = null;
 
                         if (pipeline != null) {
-                            uniforms = pipeline.initUniforms(handle);
+                            uniforms = pipeline.initUniforms(shader.handler());
 
                             if (isShadowPass) {
-                                samplers = pipeline.initShadowSamplers(handle);
+                                samplers = pipeline.initShadowSamplers(shader.handler());
                             } else {
-                                samplers = pipeline.initTerrainSamplers(handle);
+                                samplers = pipeline.initTerrainSamplers(shader.handler());
                             }
                         }
 
@@ -226,7 +226,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
 
         ChunkShaderOptions options = new ChunkShaderOptions(ChunkFogMode.SMOOTH);
 
-        this.activeProgram = this.compileProgram(isShadowPass, pass, options, sodiumTerrainPipeline);
+        this.activeProgram = this.compileProgram(pass, isShadowPass, options, sodiumTerrainPipeline);
         this.activeProgram.bind();
         this.activeProgram.getInterface()
                 .setup(this.vertexType);
@@ -263,7 +263,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
         MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
     }
 
-    private void deletePrograms(Map<BlockRenderPass, Map<ChunkShaderOptions, ChunkProgram>> programs) {
+    private void deletePrograms(Map<BlockRenderPass, Map<ChunkShaderOptions, GlProgram<ChunkShaderInterface>>> programs) {
         programs.values()
                 .stream()
                 .flatMap(i -> i.values().stream())

@@ -50,12 +50,12 @@ public class ChunkShaderInterface {
     // The fog shader component used by this program in order to setup the appropriate GL state
     private final ChunkShaderFogComponent fogShader;
 
-    public ChunkShaderInterface(RenderDevice owner, int handle, ChunkShaderOptions options,
+    public ChunkShaderInterface(ShaderBindingContext context, ChunkShaderOptions options,
                            @Nullable ProgramUniforms irisProgramUniforms, @Nullable ProgramSamplers irisProgramSamplers) {
         this.uniformModelViewMatrix = context.bindUniform("u_ModelViewMatrix", GlUniformMatrix4f::new);
         this.uniformProjectionMatrix = context.bindUniform("u_ProjectionMatrix", GlUniformMatrix4f::new);
         this.uniformModelViewProjectionMatrix = context.bindUniform("u_ModelViewProjectionMatrix", GlUniformMatrix4f::new);
-        this.uniformNormalMatrix = this.bindUniform("u_NormalMatrix", GlUniformMatrix4f::new);
+        this.uniformNormalMatrix = context.bindUniform("u_NormalMatrix", GlUniformMatrix4f::new);
 
         this.uniformBlockTex = context.bindUniform("u_BlockTex", GlUniformInt::new);
         this.uniformLightTex = context.bindUniform("u_LightTex", GlUniformInt::new);
