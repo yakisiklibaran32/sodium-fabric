@@ -211,6 +211,7 @@ public class BlockRenderPassManager {
             }
 
             return new BlockRenderPass(getLayerByName(json.getLayer()), json.isTranslucent(),
+                    json.isCutout(),
                     createShaderInfo(json.getShader("vertex")),
                     createShaderInfo(json.getShader("fragment")));
         }

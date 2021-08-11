@@ -14,6 +14,9 @@ public class RenderPassJson {
     @SerializedName("translucent")
     private boolean translucent;
 
+    @SerializedName("cutout")
+    private boolean cutout;
+
     @SerializedName("shaders")
     private Map<String, ShaderJson> shaders;
 
@@ -27,6 +30,10 @@ public class RenderPassJson {
 
     public boolean isTranslucent() {
         return this.translucent;
+    }
+
+    public boolean isCutout() {
+        return this.cutout;
     }
 
     public ShaderJson getShader(String name) {

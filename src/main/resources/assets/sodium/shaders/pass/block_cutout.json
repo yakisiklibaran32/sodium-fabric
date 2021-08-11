@@ -11,5 +11,6 @@
         "ALPHA_CUTOFF": "0.1"
       }
     }
-  }
+  },
+  "cutout": true
 }
