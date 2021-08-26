@@ -158,7 +158,7 @@ public class SodiumGameOptionPages {
     public static OptionPage quality() {
         List<OptionGroup> groups = new ArrayList<>();
         OptionImpl.Builder graphicsQuality;
-        if(!Iris.getIrisConfig().areShadersEnabled() && GlStateManager.supportsGl30()) {
+        if (!Iris.getIrisConfig().areShadersEnabled() && GlStateManager.supportsGl30()) {
             graphicsQuality = OptionImpl.createBuilder(GraphicsMode.class, vanillaOpts).setControl(option -> new CyclingControl<>(option, GraphicsMode.class, new String[] { "Fast", "Fancy", "Fabulous" }))
                     .setBinding(
                             (opts, value) -> opts.graphicsMode = value,
