@@ -17,7 +17,7 @@
   "sodium.options.fps_limit.tooltip": "Limits the maximum number of frames per second. This can help reduce battery usage and general system load when multi-tasking. If V-Sync is enabled, this option will be ignored unless it is lower than your display's refresh rate.",
   "sodium.options.view_bobbing.tooltip": "If enabled, the player's view will sway and bob when moving around. Players who experience motion sickness while playing can benefit from disabling this.",
   "sodium.options.attack_indicator.tooltip": "Controls where the Attack Indicator is displayed on screen.",
-  "sodium.options.graphics_quality.tooltip": "The default graphics quality controls some legacy options and is necessary for mod compatibility. If the options below are left to \"Default\", they will use this setting.",
+  "sodium.options.graphics_quality.tooltip": "The default graphics quality controls some legacy options and is necessary for mod compatibility. If the options below are left to \"Default\", they will use this setting. Fabulous graphics is blocked while shaders are enabled.",
   "sodium.options.clouds_quality.name": "Clouds Quality",
   "sodium.options.clouds_quality.tooltip": "Controls the quality of rendered clouds in the sky.",
   "sodium.options.weather_quality.name": "Weather Quality",

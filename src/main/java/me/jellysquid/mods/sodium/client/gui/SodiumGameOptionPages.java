@@ -151,21 +151,20 @@ public class SodiumGameOptionPages {
     public static OptionPage quality() {
         List<OptionGroup> groups = new ArrayList<>();
         OptionImpl.Builder graphicsQuality;
-        if (!Iris.getIrisConfig().areShadersEnabled() && GlStateManager.supportsGl30()) {
-            graphicsQuality = OptionImpl.createBuilder(GraphicsMode.class, vanillaOpts).setControl(option -> new CyclingControl<>(option, GraphicsMode.class, new String[] { "Fast", "Fancy", "Fabulous" }))
+        if (!Iris.getIrisConfig().areShadersEnabled()) {
+            graphicsQuality = OptionImpl.createBuilder(GraphicsMode.class, vanillaOpts).setControl(option -> new CyclingControl<>(option, GraphicsMode.class, new Text[] { Text.of("Fast"), Text.of("Fancy"), Text.of("Fabulous") }))
                     .setBinding(
                             (opts, value) -> opts.graphicsMode = value,
                             opts -> opts.graphicsMode);
 
         } else {
-            graphicsQuality = OptionImpl.createBuilder(SupportedGraphicsMode.class, vanillaOpts).setControl(option -> new CyclingControl<>(option, SupportedGraphicsMode.class, new String[] { "Fast", "Fancy"/*, "Fabulous"*/ }))
+            graphicsQuality = OptionImpl.createBuilder(SupportedGraphicsMode.class, vanillaOpts).setControl(option -> new CyclingControl<>(option, SupportedGraphicsMode.class, new Text[] { Text.of("Fast"), Text.of("Fancy")/*, "Fabulous"*/ }))
                     .setBinding(
                             (opts, value) -> opts.graphicsMode = value.toVanilla(),
                             opts -> SupportedGraphicsMode.fromVanilla(opts.graphicsMode));
         }
-        groups.add(OptionGroup.createBuilder().add(graphicsQuality.setName("Graphics Quality")
-                .setTooltip("The default graphics quality controls some legacy options and is necessary for mod compatibility. If the options below are left to " +
-                        "\"Default\", they will use this setting. Fabulous graphics are blocked while shaders are enabled.")
+        groups.add(OptionGroup.createBuilder().add(graphicsQuality.setName(new TranslatableText("options.graphics"))
+                .setTooltip(new TranslatableText("sodium.options.graphics_quality.tooltip"))
                 .setImpact(OptionImpact.HIGH)
                 .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
                 .build()).build());
