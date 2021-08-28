@@ -114,19 +114,19 @@ public class RenderSectionManager implements ChunkStatusListener {
     private ObjectList<BlockEntity> visibleBlockEntitiesSwap = new ObjectArrayList<>();
     private boolean needsUpdateSwap;
 
-    public RenderSectionManager(SodiumWorldRenderer worldRenderer, ChunkRenderer chunkRenderer, BlockRenderPassManager renderPassManager, ClientWorld world, int renderDistance) {
-        this.chunkRenderer = new RegionChunkRenderer(RenderDevice.INSTANCE, ChunkModelVertexFormats.DEFAULT);
+    public RenderSectionManager(SodiumWorldRenderer worldRenderer, BlockRenderPassManager renderPassManager, ClientWorld world, int renderDistance) {
+        this.chunkRenderer = new RegionChunkRenderer(RenderDevice.INSTANCE, ChunkModelVertexFormats.EXTENDED);
         this.worldRenderer = worldRenderer;
         this.world = world;
 
-        this.builder = new ChunkBuilder(ChunkModelVertexFormats.DEFAULT);
+        this.builder = new ChunkBuilder(ChunkModelVertexFormats.EXTENDED);
         this.builder.init(world, renderPassManager);
 
         this.needsUpdate = true;
         this.needsUpdateSwap = true;
         this.renderDistance = renderDistance;
 
-        this.regions = new RenderRegionManager(commandList);
+        this.regions = new RenderRegionManager();
         this.sectionCache = new ClonedChunkSectionCache(this.world);
 
         for (ChunkUpdateType type : ChunkUpdateType.values()) {
@@ -667,7 +667,6 @@ public class RenderSectionManager implements ChunkStatusListener {
         list.add(String.format("Chunk arena allocator: %s", SodiumClientMod.options().advanced.arenaMemoryAllocator.name()));
         list.add(String.format("Device buffer objects: %d", count));
         list.add(String.format("Device memory: %d/%d MiB", MathUtil.toMib(deviceUsed), MathUtil.toMib(deviceAllocated)));
-        list.add(String.format("Staging buffer: %s", this.regions.getStagingBuffer().toString()));
         return list;
     }
 

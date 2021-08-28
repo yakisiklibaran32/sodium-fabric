@@ -250,7 +250,7 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
 
         this.renderPassManager = BlockRenderPassManager.createDefaultMappings();
 
-        this.renderSectionManager = new RenderSectionManager(this, this.renderPassManager, this.world, this.renderDistance, commandList);
+        this.renderSectionManager = new RenderSectionManager(this, this.renderPassManager, this.world, this.renderDistance);
         this.renderSectionManager.loadChunks();
     }
 
