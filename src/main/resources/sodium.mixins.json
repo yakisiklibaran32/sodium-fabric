@@ -25,6 +25,7 @@
     "features.buffer_builder.fast_advance.MixinBufferBuilder",
     "features.buffer_builder.intrinsics.MixinBufferBuilder",
     "features.buffer_builder.intrinsics.MixinSpriteTexturedVertexConsumer",
+    "features.buffer_builder.intrinsics.MixinVertexConsumerDual",
     "features.buffer_builder.intrinsics.MixinWorldRenderer",
     "features.chunk_rendering.MixinChunkBuilder",
     "features.chunk_rendering.MixinClientChunkManager",
@@ -34,14 +35,16 @@
     "features.chunk_rendering.MixinPalettedContainer",
     "features.chunk_rendering.MixinWorldRenderer",
     "features.debug.MixinDebugHud",
+    "features.entity.cull.MixinEntityRenderer",
     "features.entity.fast_render.MixinCuboid",
     "features.entity.fast_render.MixinModelPart",
-    "features.entity.cull.MixinEntityRenderer",
     "features.fast_biome_colors.MixinBackgroundRenderer",
     "features.fast_biome_colors.MixinClientWorld",
+    "features.font.MixinGlyphRenderer",
     "features.gui.MixinDebugHud",
+    "features.gui.MixinHandledScreen",
     "features.gui.fast_loading_screen.MixinLevelLoadingScreen",
-    "features.gui.font.MixinGlyphRenderer",
+    "features.item.MixinInGameHud",
     "features.item.MixinItemRenderer",
     "features.matrix_stack.MixinMatrixStack",
     "features.matrix_stack.MixinVertexConsumer",
@@ -59,5 +62,15 @@
     "features.texture_tracking.MixinSpriteAtlasTexture",
     "features.texture_tracking.MixinSpriteBillboardParticle",
     "features.texture_updates.MixinSpriteInterpolated"
+  ],
+  "mixins": [
+    "features.block.MixinSignBlockEntityRenderer",
+    "features.buffer_builder.fast_sort.MixinBufferBuilder",
+    "features.buffer_builder.fast_sort.MixinBufferBuilder$MixinState",
+    "features.font.MixinFontManager",
+    "features.font.MixinFontManager$MixinReloadListener",
+    "features.font.MixinFontStorage",
+    "features.font.MixinTextRenderer",
+    "features.font.MixinTextRendererDrawer"
   ]
 }
