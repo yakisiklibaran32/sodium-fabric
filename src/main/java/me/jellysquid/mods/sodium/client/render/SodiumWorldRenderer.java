@@ -22,7 +22,12 @@ import me.jellysquid.mods.sodium.client.util.math.FrustumExtended;
 import me.jellysquid.mods.sodium.client.world.ChunkStatusListener;
 import me.jellysquid.mods.sodium.client.world.ChunkStatusListenerManager;
 import me.jellysquid.mods.sodium.common.util.ListUtil;
+import net.coderbot.iris.block_rendering.BlockRenderingSettings;
+import net.coderbot.iris.fantastic.WrappingVertexConsumerProvider;
+import net.coderbot.iris.layer.BlockEntityRenderPhase;
+import net.coderbot.iris.layer.OuterWrappedRenderLayer;
 import net.coderbot.iris.shadows.ShadowRenderingState;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -332,6 +337,13 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
 
             VertexConsumerProvider consumer = immediate;
             SortedSet<BlockBreakingInfo> breakingInfos = blockBreakingProgressions.get(pos.asLong());
+            int entityIntId = -1;
+            if(BlockRenderingSettings.INSTANCE.getIdMap() != null) {
+                BlockState blockAt = world.getBlockState(blockEntity.getPos());
+                if (blockEntity.getType().supports(blockAt.getBlock())) {
+                    entityIntId = BlockRenderingSettings.INSTANCE.getIdMap().getBlockProperties().getOrDefault(blockAt, -1);
+                }
+            }
 
             if (breakingInfos != null && !breakingInfos.isEmpty()) {
                 int stage = breakingInfos.last().getStage();
@@ -343,9 +355,22 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
                 }
             }
 
+            if (immediate instanceof WrappingVertexConsumerProvider) {
+                if (entityIntId != -1) {
+                    BlockEntityRenderPhase phase = new BlockEntityRenderPhase(entityIntId);
+
+                    ((WrappingVertexConsumerProvider) immediate).setWrappingFunction(layer ->
+                            new OuterWrappedRenderLayer("iris:is_block_entity", layer, phase));
+                }
+            }
+
             BlockEntityRenderDispatcher.INSTANCE.render(blockEntity, tickDelta, matrices, consumer);
 
             matrices.pop();
+
+            if (immediate instanceof WrappingVertexConsumerProvider) {
+                ((WrappingVertexConsumerProvider) immediate).setWrappingFunction(null);
+            }
         }
 
         for (BlockEntity blockEntity : this.globalBlockEntities) {
@@ -353,10 +378,31 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
 
             matrices.push();
             matrices.translate((double) pos.getX() - x, (double) pos.getY() - y, (double) pos.getZ() - z);
+            int entityIntId = -1;
+
+            if(BlockRenderingSettings.INSTANCE.getIdMap() != null) {
+                BlockState blockAt = world.getBlockState(blockEntity.getPos());
+                if (blockEntity.getType().supports(blockAt.getBlock())) {
+                    entityIntId = BlockRenderingSettings.INSTANCE.getIdMap().getBlockProperties().getOrDefault(blockAt, -1);
+                }
+            }
+
+            if (immediate instanceof WrappingVertexConsumerProvider) {
+                if (entityIntId != -1) {
+                    BlockEntityRenderPhase phase = new BlockEntityRenderPhase(entityIntId);
+
+                    ((WrappingVertexConsumerProvider) immediate).setWrappingFunction(layer ->
+                            new OuterWrappedRenderLayer("iris:is_block_entity", layer, phase));
+                }
+            }
 
             BlockEntityRenderDispatcher.INSTANCE.render(blockEntity, tickDelta, matrices, immediate);
 
             matrices.pop();
+
+            if (immediate instanceof WrappingVertexConsumerProvider) {
+                ((WrappingVertexConsumerProvider) immediate).setWrappingFunction(null);
+            }
         }
     }
 
