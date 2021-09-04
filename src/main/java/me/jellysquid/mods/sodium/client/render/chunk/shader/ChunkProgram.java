@@ -68,9 +68,11 @@ public class ChunkProgram extends GlProgram {
 
         this.fogShader.setup();
 
-        try (MemoryStack memoryStack = MemoryStack.stackPush()) {
-            GL20C.glUniformMatrix4fv(this.uModelViewProjectionMatrix, false,
-                    GameRendererContext.getModelViewProjectionMatrix(matrixStack.peek(), memoryStack));
+        if (this.uModelViewProjectionMatrix != -1) {
+            try (MemoryStack memoryStack = MemoryStack.stackPush()) {
+                GL20C.glUniformMatrix4fv(this.uModelViewProjectionMatrix, false,
+                        GameRendererContext.getModelViewProjectionMatrix(matrixStack.peek(), memoryStack));
+            }
         }
 
         if (irisProgramUniforms != null) {
@@ -95,12 +97,17 @@ public class ChunkProgram extends GlProgram {
         try {
             return super.getUniformLocation(name);
         } catch (NullPointerException e) {
-            System.err.println(e.getMessage());
+            // Suppress getUniformLocation
+            // TODO: Better way to cancel accesses to these uniforms?
             return -1;
         }
     }
 
     private void uniformMatrix(int location, Matrix4f matrix) {
+        if (location == -1) {
+            return;
+        }
+
         // TODO: Don't use BufferUtils here...
         FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
         matrix.writeToBuffer(buffer);
