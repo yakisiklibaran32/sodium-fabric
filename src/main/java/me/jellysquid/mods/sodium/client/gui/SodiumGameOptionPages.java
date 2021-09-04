@@ -14,6 +14,7 @@ import me.jellysquid.mods.sodium.client.render.chunk.backends.multidraw.Multidra
 import me.jellysquid.mods.sodium.client.util.UnsafeUtil;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.options.AttackIndicator;
@@ -28,6 +29,15 @@ import java.util.List;
 public class SodiumGameOptionPages {
     private static final SodiumOptionsStorage sodiumOpts = new SodiumOptionsStorage();
     private static final MinecraftOptionsStorage vanillaOpts = new MinecraftOptionsStorage();
+
+    private static boolean isShadowDistanceLimitedByPack() {
+        WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+
+        if (pipeline != null) {
+            return pipeline.getForcedShadowRenderDistanceChunksForDisplay().isPresent();
+        }
+        return false;
+    }
 
     public static OptionPage general() {
         List<OptionGroup> groups = new ArrayList<>();
@@ -44,11 +54,13 @@ public class SodiumGameOptionPages {
                         .build())
                 .add(OptionImpl.createBuilder(int.class, vanillaOpts)
                         .setName("Shadow View Distance")
-                        .setTooltip("The shadow view distance controls how far away terrain will be rendered in the shadow pass. Lower distances mean that less terrain will be " +
-                                "rendered, improving frame rates. This option has no effect on packs which specify a custom shadow distance.")
+                        .setTooltip(isShadowDistanceLimitedByPack() ? "Your current shader pack has already set a render distance for shadows, you cannot change it." : "Allows you to change the maximum distance for shadows. " +
+                                "Terrain and entities beyond this distance will not cast shadows. " +
+                                "Lowering the shadow distance can significantly increase performance.")
                         .setControl(option -> new SliderControl(option, 2, 32, 1, ControlValueFormatter.quantity("Chunks")))
                         .setBinding((options, value) -> IrisVideoSettings.shadowDistance = value, options -> IrisVideoSettings.shadowDistance)
                         .setImpact(OptionImpact.HIGH)
+                        .setEnabled(!isShadowDistanceLimitedByPack())
                         .setFlags(OptionFlag.REQUIRES_RENDERER_RELOAD)
                         .build())
                 .add(OptionImpl.createBuilder(int.class, vanillaOpts)
