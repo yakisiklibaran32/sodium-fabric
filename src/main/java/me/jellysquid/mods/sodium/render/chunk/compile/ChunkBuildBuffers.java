@@ -10,10 +10,14 @@ import me.jellysquid.mods.sodium.render.IndexedVertexData;
 import me.jellysquid.mods.sodium.render.chunk.compile.buffers.ChunkModelBuilder;
 import me.jellysquid.mods.sodium.render.chunk.data.ChunkMeshData;
 import me.jellysquid.mods.sodium.render.chunk.data.ChunkRenderData;
+import me.jellysquid.mods.sodium.render.chunk.format.MaterialIdHolder;
 import me.jellysquid.mods.sodium.render.chunk.format.ModelVertexSink;
 import me.jellysquid.mods.sodium.render.chunk.passes.BlockRenderPass;
 import me.jellysquid.mods.thingl.util.ElementRange;
 import me.jellysquid.mods.thingl.util.NativeBuffer;
+import net.coderbot.iris.block_rendering.BlockRenderingSettings;
+import net.coderbot.iris.shaderpack.IdMap;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.texture.Sprite;
 import org.apache.commons.lang3.Validate;
 
@@ -99,14 +103,23 @@ public class ChunkBuildBuffers {
 
         private final ModelVertexSink vertexSink;
         private final ChunkVertexType vertexType;
+        private final MaterialIdHolder idHolder;
 
         private final ChunkRenderData.Builder renderData;
 
         public ChunkModelBuilderImpl(IndexBufferBuilder[] indexBufferBuilders, VertexBufferBuilder vertexBufferBuilder,
                                      ChunkVertexType vertexType, ChunkRenderData.Builder renderData) {
+            IdMap map = BlockRenderingSettings.INSTANCE.getIdMap();
+
+            if (map != null) {
+                this.idHolder = new MaterialIdHolder(map.getBlockProperties());
+            } else {
+                this.idHolder = new MaterialIdHolder();
+            }
+
             this.indexBufferBuilders = indexBufferBuilders;
             this.vertexBufferBuilder = vertexBufferBuilder;
-            this.vertexSink = vertexType.createBufferWriter(this.vertexBufferBuilder);
+            this.vertexSink = vertexType.createBufferWriter(this.vertexBufferBuilder, this.idHolder);
             this.vertexType = vertexType;
             this.renderData = renderData;
         }
@@ -179,6 +192,16 @@ public class ChunkBuildBuffers {
             }
 
             this.vertexBufferBuilder.destroy();
+        }
+
+        @Override
+        public void setMaterialId(BlockState state, short renderType) {
+            this.idHolder.set(state, renderType);
+        }
+
+        @Override
+        public void resetMaterialId() {
+            this.idHolder.reset();
         }
     }
 }

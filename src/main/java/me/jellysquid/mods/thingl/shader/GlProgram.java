@@ -1,6 +1,7 @@
 package me.jellysquid.mods.thingl.shader;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import me.jellysquid.mods.sodium.SodiumClient;
 import me.jellysquid.mods.thingl.GlObject;
 import me.jellysquid.mods.thingl.shader.uniform.GlUniform;
 import me.jellysquid.mods.thingl.shader.uniform.GlUniformBlock;
@@ -54,7 +55,7 @@ public class GlProgram<T> extends GlObject implements ShaderBindingContext {
         int index = GL20C.glGetUniformLocation(this.handle(), name);
 
         if (index < 0) {
-            throw new NullPointerException("No uniform exists with name: " + name);
+            SodiumClient.logger().warn("No uniform exists with name: " + name);
         }
 
         return factory.apply(index);
@@ -83,7 +84,9 @@ public class GlProgram<T> extends GlObject implements ShaderBindingContext {
         }
 
         public Builder attachShader(GlShader shader) {
-            GL20C.glAttachShader(this.program, shader.handle());
+            if (shader != null) {
+                GL20C.glAttachShader(this.program, shader.handle());
+            }
 
             return this;
         }

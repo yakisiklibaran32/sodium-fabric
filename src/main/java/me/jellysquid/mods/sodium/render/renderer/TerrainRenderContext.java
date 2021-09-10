@@ -8,6 +8,7 @@ import me.jellysquid.mods.sodium.render.chunk.compile.ChunkBuildBuffers;
 import me.jellysquid.mods.sodium.render.chunk.data.ChunkMeshData;
 import me.jellysquid.mods.sodium.render.chunk.data.ChunkRenderData;
 import me.jellysquid.mods.sodium.render.chunk.passes.BlockRenderPass;
+import me.jellysquid.mods.sodium.render.chunk.passes.DefaultBlockRenderPasses;
 import me.jellysquid.mods.sodium.render.occlusion.BlockOcclusionCache;
 import me.jellysquid.mods.sodium.render.pipeline.FluidRenderer;
 import me.jellysquid.mods.sodium.render.renderer.transforms.ModelOffsetTransform;
@@ -95,6 +96,7 @@ public class TerrainRenderContext extends RenderContextBase implements RenderCon
         this.blockRenderInfo.prepareForBlock(state, pos, true);
 
         if (this.blockRenderInfo.blockState.getRenderType() == BlockRenderType.MODEL) {
+            this.buffers.getBuilder(DefaultBlockRenderPasses.OPAQUE).setMaterialId(blockRenderInfo.blockState, (short) -1);
             Vec3d offset = this.blockRenderInfo.blockState.getModelOffset(this.blockRenderInfo.blockView, this.blockRenderInfo.blockPos);
             boolean hasOffset = offset != Vec3d.ZERO;
 
@@ -108,10 +110,13 @@ public class TerrainRenderContext extends RenderContextBase implements RenderCon
             if (hasOffset) {
                 this.popTransform();
             }
+            this.buffers.getBuilder(DefaultBlockRenderPasses.OPAQUE).resetMaterialId();
         }
 
         if (!this.blockRenderInfo.fluidState.isEmpty()) {
+            this.buffers.getBuilder(DefaultBlockRenderPasses.TRANSLUCENT).setMaterialId(blockRenderInfo.fluidState.getBlockState(), (short) 1);
             this.fluidRenderer.render(this.blockRenderInfo.blockView, this.blockRenderInfo.fluidState, this.blockRenderInfo.blockPos, this);
+            this.buffers.getBuilder(DefaultBlockRenderPasses.TRANSLUCENT).resetMaterialId();
         }
     }
 

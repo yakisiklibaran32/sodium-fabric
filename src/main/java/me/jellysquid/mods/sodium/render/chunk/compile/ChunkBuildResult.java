@@ -30,8 +30,10 @@ public class ChunkBuildResult {
 
     public void delete() {
         for (ChunkMeshData data : this.meshes.values()) {
-            data.getVertexData()
-                    .delete();
+            if (data != null) {
+                data.getVertexData()
+                        .delete();
+            }
         }
     }
 

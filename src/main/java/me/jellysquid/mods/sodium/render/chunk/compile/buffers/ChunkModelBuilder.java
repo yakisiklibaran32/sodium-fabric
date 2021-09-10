@@ -3,6 +3,7 @@ package me.jellysquid.mods.sodium.render.chunk.compile.buffers;
 import me.jellysquid.mods.sodium.model.IndexBufferBuilder;
 import me.jellysquid.mods.sodium.model.quad.properties.ModelQuadFacing;
 import me.jellysquid.mods.sodium.render.chunk.format.ModelVertexSink;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.texture.Sprite;
 
 public interface ChunkModelBuilder {
@@ -12,4 +13,8 @@ public interface ChunkModelBuilder {
 
     @Deprecated
     void addSprite(Sprite sprite);
+
+    void setMaterialId(BlockState state, short renderType);
+
+    void resetMaterialId();
 }

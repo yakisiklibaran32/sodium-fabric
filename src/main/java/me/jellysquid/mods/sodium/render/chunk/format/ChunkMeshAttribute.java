@@ -5,5 +5,9 @@ public enum ChunkMeshAttribute {
     COLOR,
     BLOCK_TEXTURE,
     LIGHT_TEXTURE,
-    BLOCK_FLAGS
+    BLOCK_FLAGS,
+    NORMAL,
+    TANGENT,
+    MID_TEX_COORD,
+    BLOCK_ID
 }

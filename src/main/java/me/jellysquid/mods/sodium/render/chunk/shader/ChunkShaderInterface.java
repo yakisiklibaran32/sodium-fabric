@@ -8,6 +8,9 @@ import me.jellysquid.mods.thingl.shader.uniform.GlUniformFloat;
 import me.jellysquid.mods.thingl.shader.uniform.GlUniformInt;
 import me.jellysquid.mods.thingl.shader.uniform.GlUniformMatrix4f;
 import me.jellysquid.mods.sodium.model.vertex.type.ChunkVertexType;
+import net.coderbot.iris.gl.program.ProgramSamplers;
+import net.coderbot.iris.gl.program.ProgramUniforms;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
 /**
@@ -20,6 +23,8 @@ public class ChunkShaderInterface {
 
     private final GlUniformMatrix4f uniformModelViewMatrix;
     private final GlUniformMatrix4f uniformProjectionMatrix;
+    private final GlUniformMatrix4f uniformModelViewProjectionMatrix;
+    private final GlUniformMatrix4f uniformNormalMatrix;
 
     private final GlUniformBlock uniformBlockDrawParameters;
 
@@ -31,9 +36,18 @@ public class ChunkShaderInterface {
     private final GlUniformInt uniformBlockTex;
     private final GlUniformInt uniformLightTex;
 
-    public ChunkShaderInterface(ShaderBindingContext context, ChunkShaderOptions options) {
+    @Nullable
+    private final ProgramUniforms irisProgramUniforms;
+
+    @Nullable
+    private final ProgramSamplers irisProgramSamplers;
+
+    public ChunkShaderInterface(ShaderBindingContext context, ChunkShaderOptions options,
+                                @Nullable ProgramUniforms irisProgramUniforms, @Nullable ProgramSamplers irisProgramSamplers) {
         this.uniformModelViewMatrix = context.bindUniform("u_ModelViewMatrix", GlUniformMatrix4f::new);
         this.uniformProjectionMatrix = context.bindUniform("u_ProjectionMatrix", GlUniformMatrix4f::new);
+        this.uniformModelViewProjectionMatrix = context.bindUniform("u_ModelViewProjectionMatrix", GlUniformMatrix4f::new);
+        this.uniformNormalMatrix = context.bindUniform("u_NormalMatrix", GlUniformMatrix4f::new);
 
         this.uniformBlockTex = context.bindUniform("u_BlockTex", GlUniformInt::new);
         this.uniformLightTex = context.bindUniform("u_LightTex", GlUniformInt::new);
@@ -46,6 +60,9 @@ public class ChunkShaderInterface {
 
         this.detailBlock = options.pass().isDetail() ? new DetailedShaderInterface(context) : null;
         this.fogShader = options.fog().getFactory().apply(context);
+
+        this.irisProgramUniforms = irisProgramUniforms;
+        this.irisProgramSamplers = irisProgramSamplers;
     }
 
     public void setup(ChunkVertexType vertexType) {
@@ -61,6 +78,14 @@ public class ChunkShaderInterface {
         if (this.detailBlock != null) {
             this.detailBlock.setup(vertexType);
         }
+
+        if (irisProgramUniforms != null) {
+            irisProgramUniforms.update();
+        }
+
+        if (irisProgramSamplers != null) {
+            irisProgramSamplers.update();
+        }
     }
 
     public void setProjectionMatrix(Matrix4f matrix) {
@@ -69,6 +94,14 @@ public class ChunkShaderInterface {
 
     public void setModelViewMatrix(Matrix4f matrix) {
         this.uniformModelViewMatrix.set(matrix);
+    }
+
+    public void setModelViewProjectionMatrix(Matrix4f matrix) {
+        this.uniformModelViewProjectionMatrix.set(matrix);
+    }
+
+    public void setNormalMatrix(Matrix4f matrix) {
+        this.uniformNormalMatrix.set(matrix);
     }
 
     public void setDrawUniforms(GlMutableBuffer buffer) {

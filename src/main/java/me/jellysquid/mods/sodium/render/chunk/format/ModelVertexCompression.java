@@ -64,4 +64,16 @@ public class ModelVertexCompression {
 
         return r;
     }
+
+    static short encodeBlockTexture(float value) {
+        return (short) (value * TEXTURE_MAX_VALUE);
+    }
+
+    static float decodeBlockTexture(short raw) {
+        return (raw & 0xFFFF) * TEXTURE_SCALE;
+    }
+
+    static float decodePosition(short raw) {
+        return (raw & 0xFFFF) * MODEL_SCALE - MODEL_ORIGIN;
+    }
 }

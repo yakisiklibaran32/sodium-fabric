@@ -25,6 +25,7 @@ import me.jellysquid.mods.sodium.render.chunk.passes.BlockRenderPass;
 import me.jellysquid.mods.sodium.render.chunk.region.RenderRegion;
 import me.jellysquid.mods.sodium.render.chunk.shader.ChunkShaderBindingPoints;
 import me.jellysquid.mods.sodium.render.chunk.shader.ChunkShaderInterface;
+import net.coderbot.iris.shadows.ShadowRenderingState;
 import org.joml.Matrix4f;
 import org.lwjgl.system.MemoryStack;
 
@@ -52,7 +53,15 @@ public class RegionChunkRenderer extends ShaderChunkRenderer {
                 new GlVertexAttributeBinding(ChunkShaderBindingPoints.ATTRIBUTE_LIGHT_TEXTURE,
                         this.vertexFormat.getAttribute(ChunkMeshAttribute.LIGHT_TEXTURE)),
                 new GlVertexAttributeBinding(ChunkShaderBindingPoints.ATTRIBUTE_BLOCK_FLAGS,
-                        this.vertexFormat.getAttribute(ChunkMeshAttribute.BLOCK_FLAGS), true)
+                        this.vertexFormat.getAttribute(ChunkMeshAttribute.BLOCK_FLAGS)),
+                        new GlVertexAttributeBinding(ChunkShaderBindingPoints.BLOCK_ID,
+                                this.vertexFormat.getAttribute(ChunkMeshAttribute.BLOCK_ID)),
+                        new GlVertexAttributeBinding(ChunkShaderBindingPoints.MID_TEX_COORD,
+                                this.vertexFormat.getAttribute(ChunkMeshAttribute.MID_TEX_COORD)),
+                        new GlVertexAttributeBinding(ChunkShaderBindingPoints.TANGENT,
+                                this.vertexFormat.getAttribute(ChunkMeshAttribute.TANGENT)),
+                        new GlVertexAttributeBinding(ChunkShaderBindingPoints.NORMAL,
+                                this.vertexFormat.getAttribute(ChunkMeshAttribute.NORMAL),true)
         };
 
         try (CommandList commandList = device.createCommandList()) {
@@ -138,7 +147,7 @@ public class RegionChunkRenderer extends ShaderChunkRenderer {
 
             this.addDrawCall(state.getModelPart(ModelQuadFacing.UNASSIGNED), indexOffset, baseVertex);
 
-            if (this.isBlockFaceCullingEnabled) {
+            if (this.isBlockFaceCullingEnabled && !ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
                 if (camera.posY > bounds.y1) {
                     this.addDrawCall(state.getModelPart(ModelQuadFacing.UP), indexOffset, baseVertex);
                 }
@@ -209,9 +218,21 @@ public class RegionChunkRenderer extends ShaderChunkRenderer {
 
         Matrix4f matrix = this.cachedModelViewMatrix;
         matrix.set(matrices.modelView());
+
+
+        Matrix4f modelViewProjectionMatrix = new Matrix4f(matrices.projection());
+        modelViewProjectionMatrix.mul(matrix);
+
+        Matrix4f normal = new Matrix4f(matrices.modelView());
         matrix.translate(x, y, z);
+        modelViewProjectionMatrix.translate(x, y, z);
+        normal.translate(x, y, z);
+        normal.invert();
+        normal.transpose();
 
         shader.setModelViewMatrix(matrix);
+        shader.setModelViewProjectionMatrix(modelViewProjectionMatrix);
+        shader.setNormalMatrix(normal);
     }
 
     private void addDrawCall(ElementRange part, long baseIndexPointer, int baseVertexIndex) {

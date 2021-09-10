@@ -1,6 +1,7 @@
 package me.jellysquid.mods.sodium.mixin.core.pipeline;
 
 import me.jellysquid.mods.sodium.SodiumClient;
+import me.jellysquid.mods.sodium.render.chunk.format.MaterialIdHolder;
 import me.jellysquid.mods.thingl.attribute.BufferVertexFormat;
 import me.jellysquid.mods.sodium.model.vertex.VanillaVertexTypes;
 import me.jellysquid.mods.sodium.model.vertex.VertexDrain;
@@ -104,7 +105,7 @@ public abstract class MixinBufferBuilder implements VertexBufferView, VertexDrai
             } else if (factory == VanillaVertexTypes.QUADS) {
                 if (this.format == VertexFormats.POSITION_TEXTURE) {
                     return (T) new ModelQuadOverlayAdapter(VanillaVertexTypes.POSITION_TEXTURE.asBlittable()
-                            .createBufferWriter(this));
+                            .createBufferWriter(this, new MaterialIdHolder()));
                 }
             }
         }

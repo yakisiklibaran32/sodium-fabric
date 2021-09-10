@@ -15,6 +15,7 @@ import me.jellysquid.mods.sodium.interop.vanilla.world.ChunkStatusListener;
 import me.jellysquid.mods.sodium.interop.vanilla.world.ClientChunkManagerExtended;
 import me.jellysquid.mods.sodium.interop.vanilla.world.WorldRendererExtended;
 import me.jellysquid.mods.sodium.util.ListUtil;
+import net.coderbot.iris.shadows.ShadowRenderingState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -133,6 +134,7 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
     public void scheduleTerrainUpdate() {
         // BUG: seems to be called before init
         if (this.renderSectionManager != null) {
+            this.ensureStateSwapped();
             this.renderSectionManager.markGraphDirty();
         }
     }
@@ -142,6 +144,22 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
      */
     public boolean isTerrainRenderComplete() {
         return this.renderSectionManager.getBuilder().isBuildQueueEmpty();
+    }
+
+    private boolean wasRenderingShadows = false;
+
+    public void restoreStateIfShadowsWereBeingRendered() {
+        if (wasRenderingShadows && !ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+            this.renderSectionManager.swapState();
+            wasRenderingShadows = false;
+        }
+    }
+
+    private void ensureStateSwapped() {
+        if (!wasRenderingShadows && ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+            this.renderSectionManager.swapState();
+            wasRenderingShadows = true;
+        }
     }
 
     /**
@@ -155,6 +173,8 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
         if (this.client.options.viewDistance != this.renderDistance) {
             this.reload();
         }
+
+        ensureStateSwapped();
 
         Profiler profiler = this.client.getProfiler();
         profiler.push("camera_setup");
@@ -172,6 +192,11 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
         boolean dirty = pos.x != this.lastCameraX || pos.y != this.lastCameraY || pos.z != this.lastCameraZ ||
                 pitch != this.lastCameraPitch || yaw != this.lastCameraYaw;
 
+        if (ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+            // TODO: Detect when the sun/moon isn't moving
+            dirty = true;
+        }
+
         if (dirty) {
             this.renderSectionManager.markGraphDirty();
         }
@@ -184,7 +209,9 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
 
         profiler.swap("chunk_update");
 
-        this.renderSectionManager.updateChunks();
+        if (!ShadowRenderingState.areShadowsCurrentlyBeingRendered()) {
+            this.renderSectionManager.updateChunks();
+        }
 
         if (this.renderSectionManager.isGraphDirty()) {
             profiler.swap("chunk_graph_rebuild");
@@ -205,6 +232,8 @@ public class SodiumWorldRenderer implements ChunkStatusListener {
      * Performs a render pass for the given {@link RenderLayer} and draws all visible chunks for it.
      */
     public void drawChunkLayer(RenderLayer renderLayer, MatrixStack matrixStack, double x, double y, double z) {
+        restoreStateIfShadowsWereBeingRendered();
+
         if (renderLayer == RenderLayer.getSolid()) {
             this.drawChunkLayer(DefaultBlockRenderPasses.OPAQUE, matrixStack, x, y, z);
             this.drawChunkLayer(DefaultBlockRenderPasses.DETAIL, matrixStack, x, y, z);
