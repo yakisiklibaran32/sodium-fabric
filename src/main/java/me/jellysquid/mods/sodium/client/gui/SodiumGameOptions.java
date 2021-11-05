@@ -25,10 +25,6 @@ public class SodiumGameOptions {
 
     private Path configPath;
 
-    public void notifyListeners() {
-        SodiumClientMod.onConfigChanged(this);
-    }
-
     public static class AdvancedSettings {
         public boolean useVertexArrayObjects = true;
         public boolean useChunkMultidraw = true;

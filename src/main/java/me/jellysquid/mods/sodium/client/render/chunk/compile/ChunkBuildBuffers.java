@@ -1,5 +1,6 @@
 package me.jellysquid.mods.sodium.client.render.chunk.compile;
 
+import me.jellysquid.mods.sodium.client.SodiumClientMod;
 import me.jellysquid.mods.sodium.client.gl.buffer.VertexData;
 import me.jellysquid.mods.sodium.client.gl.util.BufferSlice;
 import me.jellysquid.mods.sodium.client.model.quad.properties.ModelQuadFacing;
@@ -14,7 +15,6 @@ import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkModelOffset;
 import me.jellysquid.mods.sodium.client.render.chunk.format.MaterialIdHolder;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPassManager;
-import me.jellysquid.mods.sodium.client.util.UnsafeUtil;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import net.coderbot.iris.shaderpack.IdMap;
 
@@ -72,7 +72,7 @@ public class ChunkBuildBuffers {
             ChunkModelVertexTransformer[] writers = new ChunkModelVertexTransformer[ModelQuadFacing.COUNT];
 
             for (ModelQuadFacing facing : ModelQuadFacing.VALUES) {
-                writers[facing.ordinal()] = new ChunkModelVertexTransformer(this.vertexType.createBufferWriter(this.buffersByLayer[i][facing.ordinal()], UnsafeUtil.isAvailable(), idHolder), this.offset);
+                writers[facing.ordinal()] = new ChunkModelVertexTransformer(this.vertexType.createBufferWriter(this.buffersByLayer[i][facing.ordinal()], SodiumClientMod.isDirectMemoryAccessEnabled(), idHolder), this.offset);
             }
 
             this.delegates[i] = new BakedChunkModelBuffers(writers, renderData);

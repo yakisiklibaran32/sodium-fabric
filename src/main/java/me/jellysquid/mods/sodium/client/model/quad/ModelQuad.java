@@ -1,9 +1,6 @@
 package me.jellysquid.mods.sodium.client.model.quad;
 
-import me.jellysquid.mods.sodium.client.util.BufferUtil;
 import net.minecraft.client.texture.Sprite;
-
-import java.nio.ByteBuffer;
 
 import static me.jellysquid.mods.sodium.client.util.ModelQuadUtil.*;
 
@@ -126,10 +123,5 @@ public class ModelQuad implements ModelQuadViewMutable {
     @Override
     public Sprite getSprite() {
         return this.sprite;
-    }
-
-    @Override
-    public void copyInto(ByteBuffer buf, int position) {
-        BufferUtil.copyIntArray(this.data, this.data.length, position, buf);
     }
 }

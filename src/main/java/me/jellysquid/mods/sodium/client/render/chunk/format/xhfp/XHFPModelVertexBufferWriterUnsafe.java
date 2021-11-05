@@ -9,6 +9,7 @@ import me.jellysquid.mods.sodium.client.render.chunk.format.ModelVertexUtil;
 import me.jellysquid.mods.sodium.client.util.Norm3b;
 
 import net.minecraft.client.util.math.Vector3f;
+import org.lwjgl.system.MemoryUtil;
 
 public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe implements ModelVertexSink {
     private MaterialIdHolder idHolder;
@@ -56,19 +57,19 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
         vertexCount++;
         // NB: uSum and vSum must already be incremented outside of this function.
         
-        UNSAFE.putShort(i, x);
-        UNSAFE.putShort(i + 2, y);
-        UNSAFE.putShort(i + 4, z);
-        UNSAFE.putInt(i + 8, color);
-        UNSAFE.putShort(i + 12, u);
-        UNSAFE.putShort(i + 14, v);
-        UNSAFE.putInt(i + 16, light);
+        MemoryUtil.memPutShort(i, x);
+        MemoryUtil.memPutShort(i + 2, y);
+        MemoryUtil.memPutShort(i + 4, z);
+        MemoryUtil.memPutInt(i + 8, color);
+        MemoryUtil.memPutShort(i + 12, u);
+        MemoryUtil.memPutShort(i + 14, v);
+        MemoryUtil.memPutInt(i + 16, light);
         // NB: We don't set midTexCoord, normal, and tangent here, they will be filled in later.
         // block ID
-        UNSAFE.putFloat(i + 32, materialId);
-        UNSAFE.putFloat(i + 36, renderType);
-        UNSAFE.putFloat(i + 40, (short) 0);
-        UNSAFE.putFloat(i + 44, (short) 0);
+        MemoryUtil.memPutFloat(i + 32, materialId);
+        MemoryUtil.memPutFloat(i + 36, renderType);
+        MemoryUtil.memPutFloat(i + 40, (short) 0);
+        MemoryUtil.memPutFloat(i + 44, (short) 0);
 
         if (vertexCount == 4) {
             // TODO: Consider applying similar vertex coordinate transformations as the normal HFP texture coordinates
@@ -76,10 +77,10 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
             short midV = (short)(65536.0F * (vSum * 0.25f));
             int midTexCoord = (midV << 16) | midU;
 
-            UNSAFE.putInt(i + 20, midTexCoord);
-            UNSAFE.putInt(i + 20 - STRIDE, midTexCoord);
-            UNSAFE.putInt(i + 20 - STRIDE * 2, midTexCoord);
-            UNSAFE.putInt(i + 20 - STRIDE * 3, midTexCoord);
+            MemoryUtil.memPutInt(i + 20, midTexCoord);
+            MemoryUtil.memPutInt(i + 20 - STRIDE, midTexCoord);
+            MemoryUtil.memPutInt(i + 20 - STRIDE * 2, midTexCoord);
+            MemoryUtil.memPutInt(i + 20 - STRIDE * 3, midTexCoord);
 
             vertexCount = 0;
             uSum = 0;
@@ -93,23 +94,23 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
             NormalHelper.computeFaceNormal(normal, currentQuad, true);
             int packedNormal = NormalHelper.packNormal(normal, 0.0f);
 
-            UNSAFE.putInt(i + 28, packedNormal);
-            UNSAFE.putInt(i + 28 - STRIDE, packedNormal);
-            UNSAFE.putInt(i + 28 - STRIDE * 2, packedNormal);
-            UNSAFE.putInt(i + 28 - STRIDE * 3, packedNormal);
+            MemoryUtil.memPutInt(i + 28, packedNormal);
+            MemoryUtil.memPutInt(i + 28 - STRIDE, packedNormal);
+            MemoryUtil.memPutInt(i + 28 - STRIDE * 2, packedNormal);
+            MemoryUtil.memPutInt(i + 28 - STRIDE * 3, packedNormal);
 
             // Capture all of the relevant vertex positions
-            float x0 = normalizeVertexPositionShortAsFloat(UNSAFE.getShort(i - STRIDE * 3));
-            float y0 = normalizeVertexPositionShortAsFloat(UNSAFE.getShort(i + 2 - STRIDE * 3));
-            float z0 = normalizeVertexPositionShortAsFloat(UNSAFE.getShort(i + 4 - STRIDE * 3));
+            float x0 = normalizeVertexPositionShortAsFloat(MemoryUtil.memGetShort(i - STRIDE * 3));
+            float y0 = normalizeVertexPositionShortAsFloat(MemoryUtil.memGetShort(i + 2 - STRIDE * 3));
+            float z0 = normalizeVertexPositionShortAsFloat(MemoryUtil.memGetShort(i + 4 - STRIDE * 3));
 
-            float x1 = normalizeVertexPositionShortAsFloat(UNSAFE.getShort(i - STRIDE * 2));
-            float y1 = normalizeVertexPositionShortAsFloat(UNSAFE.getShort(i + 2 - STRIDE * 2));
-            float z1 = normalizeVertexPositionShortAsFloat(UNSAFE.getShort(i + 4 - STRIDE * 2));
+            float x1 = normalizeVertexPositionShortAsFloat(MemoryUtil.memGetShort(i - STRIDE * 2));
+            float y1 = normalizeVertexPositionShortAsFloat(MemoryUtil.memGetShort(i + 2 - STRIDE * 2));
+            float z1 = normalizeVertexPositionShortAsFloat(MemoryUtil.memGetShort(i + 4 - STRIDE * 2));
 
-            float x2 = normalizeVertexPositionShortAsFloat(UNSAFE.getShort(i - STRIDE));
-            float y2 = normalizeVertexPositionShortAsFloat(UNSAFE.getShort(i + 2 - STRIDE));
-            float z2 = normalizeVertexPositionShortAsFloat(UNSAFE.getShort(i + 4 - STRIDE));
+            float x2 = normalizeVertexPositionShortAsFloat(MemoryUtil.memGetShort(i - STRIDE));
+            float y2 = normalizeVertexPositionShortAsFloat(MemoryUtil.memGetShort(i + 2 - STRIDE));
+            float z2 = normalizeVertexPositionShortAsFloat(MemoryUtil.memGetShort(i + 4 - STRIDE));
 
             float edge1x = x1 - x0;
             float edge1y = y1 - y0;
@@ -119,14 +120,14 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
             float edge2y = y2 - y0;
             float edge2z = z2 - z0;
 
-            float u0 = normalizeVertexTextureShortAsFloat(UNSAFE.getShort(i + 12 - STRIDE * 3));
-            float v0 = normalizeVertexTextureShortAsFloat(UNSAFE.getShort(i + 14 - STRIDE * 3));
+            float u0 = normalizeVertexTextureShortAsFloat(MemoryUtil.memGetShort(i + 12 - STRIDE * 3));
+            float v0 = normalizeVertexTextureShortAsFloat(MemoryUtil.memGetShort(i + 14 - STRIDE * 3));
 
-            float u1 = normalizeVertexTextureShortAsFloat(UNSAFE.getShort(i + 12 - STRIDE * 2));
-            float v1 = normalizeVertexTextureShortAsFloat(UNSAFE.getShort(i + 14 - STRIDE * 2));
+            float u1 = normalizeVertexTextureShortAsFloat(MemoryUtil.memGetShort(i + 12 - STRIDE * 2));
+            float v1 = normalizeVertexTextureShortAsFloat(MemoryUtil.memGetShort(i + 14 - STRIDE * 2));
 
-            float u2 = normalizeVertexTextureShortAsFloat(UNSAFE.getShort(i + 12 - STRIDE));
-            float v2 = normalizeVertexTextureShortAsFloat(UNSAFE.getShort(i + 14 - STRIDE));
+            float u2 = normalizeVertexTextureShortAsFloat(MemoryUtil.memGetShort(i + 12 - STRIDE));
+            float v2 = normalizeVertexTextureShortAsFloat(MemoryUtil.memGetShort(i + 14 - STRIDE));
 
             float deltaU1 = u1 - u0;
             float deltaV1 = v1 - v0;
@@ -180,10 +181,10 @@ public class XHFPModelVertexBufferWriterUnsafe extends VertexBufferWriterUnsafe 
             int tangent = Norm3b.pack(tangentx, tangenty, tangentz);
             tangent |= (tangentW << 24);
 
-            UNSAFE.putInt(i + 24, tangent);
-            UNSAFE.putInt(i + 24 - STRIDE, tangent);
-            UNSAFE.putInt(i + 24 - STRIDE * 2, tangent);
-            UNSAFE.putInt(i + 24 - STRIDE * 3, tangent);
+            MemoryUtil.memPutInt(i + 24, tangent);
+            MemoryUtil.memPutInt(i + 24 - STRIDE, tangent);
+            MemoryUtil.memPutInt(i + 24 - STRIDE * 2, tangent);
+            MemoryUtil.memPutInt(i + 24 - STRIDE * 3, tangent);
         }
 
         this.advance();

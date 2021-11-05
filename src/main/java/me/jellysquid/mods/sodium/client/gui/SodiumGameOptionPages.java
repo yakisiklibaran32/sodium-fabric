@@ -11,7 +11,6 @@ import me.jellysquid.mods.sodium.client.gui.options.control.TickBoxControl;
 import me.jellysquid.mods.sodium.client.gui.options.storage.MinecraftOptionsStorage;
 import me.jellysquid.mods.sodium.client.gui.options.storage.SodiumOptionsStorage;
 import me.jellysquid.mods.sodium.client.render.chunk.backends.multidraw.MultidrawChunkRenderBackend;
-import me.jellysquid.mods.sodium.client.util.UnsafeUtil;
 import net.coderbot.iris.Iris;
 import net.coderbot.iris.gui.option.IrisVideoSettings;
 import net.minecraft.client.MinecraftClient;
@@ -373,7 +372,6 @@ public class SodiumGameOptionPages {
                                 "bugs and crashes. You should only disable this if you've been asked to or otherwise know what you're doing.")
                         .setControl(TickBoxControl::new)
                         .setImpact(OptionImpact.HIGH)
-                        .setEnabled(UnsafeUtil.isSupported())
                         .setBinding((opts, value) -> opts.advanced.allowDirectMemoryAccess = value, opts -> opts.advanced.allowDirectMemoryAccess)
                         .build()
                 )
