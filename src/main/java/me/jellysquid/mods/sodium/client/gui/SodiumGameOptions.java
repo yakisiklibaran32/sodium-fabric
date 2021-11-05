@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder;
 import me.jellysquid.mods.sodium.client.SodiumClientMod;
 import me.jellysquid.mods.sodium.client.gui.options.TextProvider;
 import me.jellysquid.mods.sodium.client.render.chunk.backends.multidraw.MultidrawChunkRenderBackend;
+import net.coderbot.iris.Iris;
 import net.minecraft.client.options.GraphicsMode;
 
 import java.io.FileReader;
@@ -135,5 +136,11 @@ public class SodiumGameOptions {
 
         Files.write(this.configPath, GSON.toJson(this)
                 .getBytes(StandardCharsets.UTF_8));
+
+        try {
+            Iris.getIrisConfig().save();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
