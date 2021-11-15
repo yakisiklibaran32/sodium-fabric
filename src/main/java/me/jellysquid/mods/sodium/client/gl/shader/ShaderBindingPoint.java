@@ -1,4 +1,6 @@
 package me.jellysquid.mods.sodium.client.gl.shader;
 
-public record ShaderBindingPoint(int genericAttributeIndex) {
+import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkMeshAttribute;
+
+public record ShaderBindingPoint(String name, ChunkMeshAttribute attribute, int genericAttributeIndex) {
 }

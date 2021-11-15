@@ -11,7 +11,7 @@ import org.lwjgl.system.jemalloc.JEmalloc;
 
 import java.util.Objects;
 
-public class SodiumPreLaunch implements PreLaunchEntrypoint {
+public class  SodiumPreLaunch implements PreLaunchEntrypoint {
     private static final Logger LOGGER = LogManager.getLogger("Sodium");
 
     @Override

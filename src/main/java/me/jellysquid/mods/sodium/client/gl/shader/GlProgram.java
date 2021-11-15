@@ -12,6 +12,7 @@ import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL32C;
 
+import java.util.List;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
@@ -116,14 +117,14 @@ public class GlProgram<T> extends GlObject implements ShaderBindingContext {
             return new GlProgram<>(this.program, factory);
         }
 
-        public Builder bindAttribute(String name, ShaderBindingPoint binding) {
-            GL20C.glBindAttribLocation(this.program, binding.genericAttributeIndex(), name);
+        public Builder bindAttributes(List<ShaderBindingPoint> shaderBindingPoints) {
+            shaderBindingPoints.forEach((binding) -> GL20C.glBindAttribLocation(this.program, binding.genericAttributeIndex(), binding.name()));
 
             return this;
         }
 
-        public Builder bindFragmentData(String name, ShaderBindingPoint binding) {
-            GL30C.glBindFragDataLocation(this.program, binding.genericAttributeIndex(), name);
+        public Builder bindFragmentData(ShaderBindingPoint binding) {
+            GL30C.glBindFragDataLocation(this.program, binding.genericAttributeIndex(), binding.name());
 
             return this;
         }

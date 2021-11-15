@@ -41,16 +41,14 @@ public class RegionChunkRenderer extends ShaderChunkRenderer {
     public RegionChunkRenderer(RenderDevice device, ChunkVertexType vertexType) {
         super(device, vertexType);
 
-        this.vertexAttributeBindings = new GlVertexAttributeBinding[] {
-                new GlVertexAttributeBinding(ChunkShaderBindingPoints.ATTRIBUTE_POSITION_ID,
-                        this.vertexFormat.getAttribute(ChunkMeshAttribute.POSITION_ID)),
-                new GlVertexAttributeBinding(ChunkShaderBindingPoints.ATTRIBUTE_COLOR,
-                        this.vertexFormat.getAttribute(ChunkMeshAttribute.COLOR)),
-                new GlVertexAttributeBinding(ChunkShaderBindingPoints.ATTRIBUTE_BLOCK_TEXTURE,
-                        this.vertexFormat.getAttribute(ChunkMeshAttribute.BLOCK_TEXTURE)),
-                new GlVertexAttributeBinding(ChunkShaderBindingPoints.ATTRIBUTE_LIGHT_TEXTURE,
-                        this.vertexFormat.getAttribute(ChunkMeshAttribute.LIGHT_TEXTURE))
-        };
+        vertexAttributeBindings = new GlVertexAttributeBinding[ChunkShaderBindingPoints.getActiveBindingPoints().size()];
+        final int[] index = { 0 };
+        ChunkShaderBindingPoints.getActiveBindingPoints().forEach((shaderBindingPoint -> {
+            if (shaderBindingPoint.genericAttributeIndex() != 0) {
+                vertexAttributeBindings[index[0]] = new GlVertexAttributeBinding(shaderBindingPoint, this.vertexFormat.getAttribute(shaderBindingPoint.attribute()));
+                index[0]++;
+            }
+        }));
 
         try (CommandList commandList = device.createCommandList()) {
             this.chunkInfoBuffer = commandList.createMutableBuffer();
