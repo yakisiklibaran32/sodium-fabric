@@ -9,11 +9,11 @@ import me.jellysquid.mods.sodium.client.gl.arena.staging.StagingBuffer;
 import me.jellysquid.mods.sodium.client.gl.device.CommandList;
 import me.jellysquid.mods.sodium.client.gl.tessellation.GlTessellation;
 import me.jellysquid.mods.sodium.client.util.frustum.Frustum;
+import net.minecraft.core.SectionPos;
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSection;
 import me.jellysquid.mods.sodium.client.render.chunk.format.ChunkModelVertexFormats;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 import me.jellysquid.mods.sodium.client.util.MathUtil;
-import net.minecraft.util.math.ChunkSectionPos;
 import org.apache.commons.lang3.Validate;
 
 import java.util.EnumMap;
@@ -76,7 +76,7 @@ public class RenderRegion {
     }
 
     public static long getRegionKeyForChunk(int x, int y, int z) {
-        return ChunkSectionPos.asLong(x >> REGION_WIDTH_SH, y >> REGION_HEIGHT_SH, z >> REGION_LENGTH_SH);
+        return SectionPos.asLong(x >> REGION_WIDTH_SH, y >> REGION_HEIGHT_SH, z >> REGION_LENGTH_SH);
     }
 
     public int getOriginX() {

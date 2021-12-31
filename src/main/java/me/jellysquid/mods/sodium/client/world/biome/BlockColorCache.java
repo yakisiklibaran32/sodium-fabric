@@ -2,12 +2,11 @@ package me.jellysquid.mods.sodium.client.world.biome;
 
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import me.jellysquid.mods.sodium.client.world.WorldSlice;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkSectionPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.ColorResolver;
-
+import net.minecraft.world.level.biome.Biome;
 import java.util.Map;
 
 public class BlockColorCache {
@@ -35,20 +34,20 @@ public class BlockColorCache {
 
         this.blurHorizontal = radius;
 
-        ChunkSectionPos pos = slice.getOrigin();
+        SectionPos pos = slice.getOrigin();
 
-        this.baseX = pos.getMinX() - borderXZ;
-        this.baseY = pos.getMinY() - borderY;
-        this.baseZ = pos.getMinZ() - borderXZ;
+        this.baseX = pos.minBlockX() - borderXZ;
+        this.baseY = pos.minBlockY() - borderY;
+        this.baseZ = pos.minBlockZ() - borderXZ;
 
         this.colors = new Reference2ReferenceOpenHashMap<>();
         this.biomes = new Biome[this.sizeVertical][];
     }
 
     public int getColor(ColorResolver resolver, int posX, int posY, int posZ) {
-        var x = MathHelper.clamp(posX - this.baseX, 0, this.sizeHorizontal);
-        var y = MathHelper.clamp(posY - this.baseY, 0, this.sizeVertical);
-        var z = MathHelper.clamp(posZ - this.baseZ, 0, this.sizeHorizontal);
+        var x = Mth.clamp(posX - this.baseX, 0, this.sizeHorizontal);
+        var y = Mth.clamp(posY - this.baseY, 0, this.sizeVertical);
+        var z = Mth.clamp(posZ - this.baseZ, 0, this.sizeHorizontal);
 
         int[][] colors = this.colors.get(resolver);
 
@@ -69,7 +68,7 @@ public class BlockColorCache {
         var biomeAccess = this.slice.getBiomeAccess();
         var biomeData = new Biome[this.sizeHorizontal * this.sizeHorizontal];
 
-        var pos = new BlockPos.Mutable();
+        var pos = new BlockPos.MutableBlockPos();
 
         for (int x = 0; x < this.sizeHorizontal; x++) {
             for (int z = 0; z < this.sizeHorizontal; z++) {

@@ -5,11 +5,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import me.jellysquid.mods.sodium.client.gui.options.TextProvider;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.option.GraphicsMode;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
-
+import net.minecraft.client.GraphicsStatus;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
@@ -73,14 +71,14 @@ public class SodiumGameOptions {
         ASYNC("sodium.options.chunk_memory_allocator.async"),
         SWAP("sodium.options.chunk_memory_allocator.swap");
 
-        private final Text name;
+        private final Component name;
 
         ArenaMemoryAllocator(String name) {
-            this.name = new TranslatableText(name);
+            this.name = new TranslatableComponent(name);
         }
 
         @Override
-        public Text getLocalizedName() {
+        public Component getLocalizedName() {
             return this.name;
         }
     }
@@ -90,19 +88,19 @@ public class SodiumGameOptions {
         FANCY("options.clouds.fancy"),
         FAST("options.clouds.fast");
 
-        private final Text name;
+        private final Component name;
 
         GraphicsQuality(String name) {
-            this.name = new TranslatableText(name);
+            this.name = new TranslatableComponent(name);
         }
 
         @Override
-        public Text getLocalizedName() {
+        public Component getLocalizedName() {
             return this.name;
         }
 
-        public boolean isFancy(GraphicsMode graphicsMode) {
-            return (this == FANCY) || (this == DEFAULT && (graphicsMode == GraphicsMode.FANCY || graphicsMode == GraphicsMode.FABULOUS));
+        public boolean isFancy(GraphicsStatus graphicsMode) {
+            return (this == FANCY) || (this == DEFAULT && (graphicsMode == GraphicsStatus.FANCY || graphicsMode == GraphicsStatus.FABULOUS));
         }
     }
 
