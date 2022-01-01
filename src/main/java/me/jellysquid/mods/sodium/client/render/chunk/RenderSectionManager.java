@@ -85,7 +85,7 @@ public class RenderSectionManager {
     private final RegionChunkRenderer chunkRenderer;
 
     private final SodiumWorldRenderer worldRenderer;
-    private final ClientLevel world;
+    private final ClientLevel level;
 
     private final int renderDistance;
 
@@ -106,26 +106,26 @@ public class RenderSectionManager {
 
     private final ChunkTracker tracker;
 
-    public RenderSectionManager(SodiumWorldRenderer worldRenderer, BlockRenderPassManager renderPassManager, ClientLevel world, int renderDistance, CommandList commandList) {
+    public RenderSectionManager(SodiumWorldRenderer worldRenderer, BlockRenderPassManager renderPassManager, ClientLevel level, int renderDistance, CommandList commandList) {
         this.chunkRenderer = new RegionChunkRenderer(RenderDevice.INSTANCE, ChunkModelVertexFormats.DEFAULT);
 
         this.worldRenderer = worldRenderer;
-        this.world = world;
+        this.level = level;
 
         this.builder = new ChunkBuilder(ChunkModelVertexFormats.DEFAULT);
-        this.builder.init(world, renderPassManager);
+        this.builder.init(level, renderPassManager);
 
         this.needsUpdate = true;
         this.renderDistance = renderDistance;
 
         this.regions = new RenderRegionManager(commandList);
-        this.sectionCache = new ClonedChunkSectionCache(this.world);
+        this.sectionCache = new ClonedChunkSectionCache(this.level);
 
         for (ChunkUpdateType type : ChunkUpdateType.values()) {
             this.rebuildQueues.put(type, new ObjectArrayFIFOQueue<>());
         }
 
-        this.tracker = this.worldRenderer.getChunkTracker();
+        this.tracker = worldRenderer.getChunkTracker();
     }
 
     public void reloadChunks(ChunkTracker tracker) {
@@ -237,13 +237,13 @@ public class RenderSectionManager {
     }
 
     public void onChunkAdded(int x, int z) {
-        for (int y = this.world.getMinSection(); y < this.world.getMaxSection(); y++) {
+        for (int y = this.level.getMinSection(); y < this.level.getMaxSection(); y++) {
             this.needsUpdate |= this.loadSection(x, y, z);
         }
     }
 
     public void onChunkRemoved(int x, int z) {
-        for (int y = this.world.getMinSection(); y < this.world.getMaxSection(); y++) {
+        for (int y = this.level.getMinSection(); y < this.level.getMaxSection(); y++) {
             this.needsUpdate |= this.unloadSection(x, y, z);
         }
     }
@@ -256,8 +256,8 @@ public class RenderSectionManager {
 
         this.sections.put(SectionPos.asLong(x, y, z), render);
 
-        ChunkAccess chunk = this.world.getChunk(x, z);
-        LevelChunkSection section = chunk.getSections()[this.world.getSectionIndexFromSectionY(y)];
+        ChunkAccess chunk = this.level.getChunk(x, z);
+        LevelChunkSection section = chunk.getSections()[this.level.getSectionIndexFromSectionY(y)];
 
         if (section.hasOnlyAir()) {
             render.setData(ChunkRenderData.EMPTY);
@@ -382,7 +382,7 @@ public class RenderSectionManager {
     }
 
     public ChunkRenderBuildTask createRebuildTask(RenderSection render) {
-        ChunkRenderContext context = WorldSlice.prepare(this.world, render.getChunkPos(), this.sectionCache);
+        ChunkRenderContext context = WorldSlice.prepare(this.level, render.getChunkPos(), this.sectionCache);
         int frame = this.currentFrame;
 
         if (context == null) {
@@ -495,13 +495,13 @@ public class RenderSectionManager {
             rootInfo.resetCullingState();
             rootInfo.setLastVisibleFrame(frame);
 
-            if (spectator && this.world.getBlockState(origin).isSolidRender(this.world, origin)) {
+            if (spectator && this.level.getBlockState(origin).isSolidRender(this.level, origin)) {
                 this.useOcclusionCulling = false;
             }
 
             this.addVisible(rootRender, null);
         } else {
-            chunkY = Mth.clamp(origin.getY() >> 4, this.world.getMinSection(), this.world.getMaxSection() - 1);
+            chunkY = Mth.clamp(origin.getY() >> 4, this.level.getMinSection(), this.level.getMaxSection() - 1);
 
             List<RenderSection> sorted = new ArrayList<>();
 

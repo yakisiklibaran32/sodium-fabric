@@ -19,7 +19,7 @@ import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPassManag
 import me.jellysquid.mods.sodium.client.render.pipeline.context.ChunkRenderCacheShared;
 import me.jellysquid.mods.sodium.client.util.NativeBuffer;
 import me.jellysquid.mods.sodium.client.util.frustum.Frustum;
-import me.jellysquid.mods.sodium.client.world.WorldRendererExtended;
+import me.jellysquid.mods.sodium.client.world.LevelRendererExtended;
 import me.jellysquid.mods.sodium.common.util.ListUtil;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -49,7 +49,7 @@ import java.util.SortedSet;
 public class SodiumWorldRenderer {
     private final Minecraft client;
 
-    private ClientLevel world;
+    private ClientLevel level;
     private int renderDistance;
 
     private double lastCameraX, lastCameraY, lastCameraZ;
@@ -83,8 +83,8 @@ public class SodiumWorldRenderer {
     public static SodiumWorldRenderer instanceNullable() {
         var world = Minecraft.getInstance().levelRenderer;
 
-        if (world instanceof WorldRendererExtended) {
-            return ((WorldRendererExtended) world).getSodiumWorldRenderer();
+        if (world instanceof LevelRendererExtended) {
+            return ((LevelRendererExtended) world).getSodiumWorldRenderer();
         }
 
         return null;
@@ -94,36 +94,36 @@ public class SodiumWorldRenderer {
         this.client = client;
     }
 
-    public void setWorld(ClientLevel world) {
-        // Check that the world is actually changing
-        if (this.world == world) {
+    public void setLevel(ClientLevel level) {
+        // Check that the level is actually changing
+        if (this.level == level) {
             return;
         }
 
-        // If we have a world is already loaded, unload the renderer
-        if (this.world != null) {
-            this.unloadWorld();
+        // If we have a level that is already loaded, unload the renderer
+        if (this.level != null) {
+            this.unloadLevel();
         }
 
         // If we're loading a new world, load the renderer
-        if (world != null) {
-            this.loadWorld(world);
+        if (level != null) {
+            this.loadLevel(level);
         }
     }
 
-    private void loadWorld(ClientLevel world) {
-        this.world = world;
+    private void loadLevel(ClientLevel level) {
+        this.level = level;
         this.chunkTracker = new ChunkTracker();
 
-        ChunkRenderCacheShared.createRenderContext(this.world);
+        ChunkRenderCacheShared.createRenderContext(this.level);
 
         try (CommandList commandList = RenderDevice.INSTANCE.createCommandList()) {
             this.initRenderer(commandList);
         }
     }
 
-    private void unloadWorld() {
-        ChunkRenderCacheShared.destroyRenderContext(this.world);
+    private void unloadLevel() {
+        ChunkRenderCacheShared.destroyRenderContext(this.level);
 
         if (this.renderSectionManager != null) {
             this.renderSectionManager.destroy();
@@ -133,7 +133,7 @@ public class SodiumWorldRenderer {
         this.globalBlockEntities.clear();
 
         this.chunkTracker = null;
-        this.world = null;
+        this.level = null;
     }
 
     /**
@@ -223,17 +223,17 @@ public class SodiumWorldRenderer {
     /**
      * Performs a render pass for the given {@link RenderType} and draws all visible chunks for it.
      */
-    public void drawChunkLayer(RenderType renderLayer, PoseStack matrixStack, double x, double y, double z) {
+    public void drawChunkLayer(RenderType renderLayer, PoseStack poseStack, double x, double y, double z) {
         BlockRenderPass pass = this.renderPassManager.getRenderPassForLayer(renderLayer);
         pass.startDrawing();
 
-        this.renderSectionManager.renderLayer(ChunkRenderMatrices.from(matrixStack), pass, x, y, z);
+        this.renderSectionManager.renderLayer(ChunkRenderMatrices.from(poseStack), pass, x, y, z);
 
         pass.endDrawing();
     }
 
     public void reload() {
-        if (this.world == null) {
+        if (this.level == null) {
             return;
         }
 
@@ -252,7 +252,7 @@ public class SodiumWorldRenderer {
 
         this.renderPassManager = BlockRenderPassManager.createDefaultMappings();
 
-        this.renderSectionManager = new RenderSectionManager(this, this.renderPassManager, this.world, this.renderDistance, commandList);
+        this.renderSectionManager = new RenderSectionManager(this, this.renderPassManager, this.level, this.renderDistance, commandList);
         this.renderSectionManager.reloadChunks(this.chunkTracker);
     }
 

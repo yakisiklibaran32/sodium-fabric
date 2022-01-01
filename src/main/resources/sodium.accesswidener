@@ -2,16 +2,12 @@ accessWidener v1 named
 
 accessible class net/minecraft/client/model/geom/ModelPart$Vertex
 accessible class net/minecraft/client/model/geom/ModelPart$Polygon
-accessible class net/minecraft/client/model/geom/ModelPart$Quad
 accessible class net/minecraft/client/renderer/texture/TextureAtlasSprite$InterpolationData
 accessible class net/minecraft/client/renderer/texture/TextureAtlasSprite
-accessible class net/minecraft/client/world/ClientWorld$BlockParticle
 accessible class net/minecraft/client/renderer/texture/TextureAtlasSprite$AnimatedTexture
 accessible class net/minecraft/world/level/chunk/PalettedContainer$Data
 accessible class net/minecraft/world/level/chunk/PalettedContainer$Configuration
 
-accessible method net/minecraft/client/renderer/texture/TextureAtlasSprite$Interpolation apply ()V
-accessible method net/minecraft/client/render/Frustum isVisible (DDDDDD)Z
 accessible method net/minecraft/client/renderer/texture/TextureAtlasSprite upload (II[Lcom/mojang/blaze3d/platform/NativeImage;)V
 
 accessible field net/minecraft/client/CycleOption setter Lnet/minecraft/client/CycleOption$OptionSetter;

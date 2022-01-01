@@ -28,7 +28,7 @@ public class ChunkBuilder {
     private final AtomicBoolean running = new AtomicBoolean(false);
     private final List<Thread> threads = new ArrayList<>();
 
-    private Level world;
+    private Level level;
     private BlockRenderPassManager renderPassManager;
 
     private final int limitThreads;
@@ -64,7 +64,7 @@ public class ChunkBuilder {
         }
 
         for (int i = 0; i < this.limitThreads; i++) {
-            ChunkBuildContext context = new ChunkBuildContext(this.world, this.vertexType, this.renderPassManager);
+            ChunkBuildContext context = new ChunkBuildContext(this.level, this.vertexType, this.renderPassManager);
             WorkerRunnable worker = new WorkerRunnable(context);
 
             Thread thread = new Thread(worker, "Chunk Render Task Executor #" + i);
@@ -121,7 +121,7 @@ public class ChunkBuilder {
 
         this.buildQueue.clear();
 
-        this.world = null;
+        this.level = null;
     }
 
     public CompletableFuture<ChunkBuildResult> schedule(ChunkRenderBuildTask task) {
@@ -151,17 +151,17 @@ public class ChunkBuilder {
      * Initializes this chunk builder for the given world. If the builder is already running (which can happen during
      * a world teleportation event), the worker threads will first be stopped and all pending tasks will be discarded
      * before being started again.
-     * @param world The world instance
+     * @param level The world instance
      * @param renderPassManager The render pass manager used for the world
      */
-    public void init(ClientLevel world, BlockRenderPassManager renderPassManager) {
-        if (world == null) {
+    public void init(ClientLevel level, BlockRenderPassManager renderPassManager) {
+        if (level == null) {
             throw new NullPointerException("World is null");
         }
 
         this.stopWorkers();
 
-        this.world = world;
+        this.level = level;
         this.renderPassManager = renderPassManager;
 
         this.startWorkers();
@@ -210,7 +210,7 @@ public class ChunkBuilder {
         ChunkBuildContext context = this.localContexts.get();
 
         if (context == null) {
-            this.localContexts.set(context = new ChunkBuildContext(this.world, this.vertexType, this.renderPassManager));
+            this.localContexts.set(context = new ChunkBuildContext(this.level, this.vertexType, this.renderPassManager));
         }
 
         try {
